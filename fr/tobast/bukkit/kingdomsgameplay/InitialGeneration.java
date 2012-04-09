@@ -113,53 +113,12 @@ public class InitialGeneration
 				base.getBlock().setData(woolValue);
 				base.add(-1,0,0);
 			}
+			base.add(0,-3,1);
+			base.getBlock().setType(Material.STONE_BUTTON);
+			base.getBlock().setData((byte)3);
 		}
 	}
-/*
-	protected void drawBases() // replaces ground with wool at the boundaries of the base
-	{
-		for(int i=0;i<2;i++)
-		{
-			Location currentPos=bases[i][0].clone();
-
-			byte woolValue=0;
-			if(i==0) // Red team
-				woolValue=14;
-			else // Blue team 
-				woolValue=11;
-
-			while(currentPos.getX() <= bases[i][1].getX())
-				drawWoolLine(woolValue, currentPos, new Vector(1.0,0.0,0.0));
-			while(currentPos.getZ() <= bases[i][1].getZ())
-				drawWoolLine(woolValue, currentPos, new Vector(0.0,0.0,1.0));
-			while(currentPos.getX() >= bases[i][0].getX())
-				drawWoolLine(woolValue, currentPos, new Vector(-1.0,0.0,0.0));
-			while(currentPos.getZ() >= bases[i][0].getZ())
-				drawWoolLine(woolValue, currentPos, new Vector(0.0,0.0,-1.0));
-		}
-	}
-
-	protected void drawWoolLine(byte woolValue, Location currentPos, Vector addMask)
-	{
-		// Fetch the floor
-		if(currentPos.getBlock().getType() != Material.AIR)
-		{
-			while(currentPos.getBlock().getRelative(BlockFace.UP).getType() != Material.AIR)
-				currentPos.add(0,1,0);
-		}
-		else
-		{
-			while(currentPos.getBlock().getType() == Material.AIR)
-				currentPos.add(0,-1,0);
-		}
-
-		// Replace it with appropriate wool
-		currentPos.getBlock().setType(Material.WOOL);
-		currentPos.getBlock().setData(woolValue);
-
-		currentPos.add(addMask);
-	}
-*/
+	
 	public Team newPlayer(Hashtable<String, Team> playerTeams)
 	{
 		Collection<Team> teamCollect=playerTeams.values();
