@@ -19,12 +19,12 @@ public class ConfRead
 	
 	private ArrayList<Location> bases_r = new ArrayList<Location>();
 	private ArrayList<Location> bases_b = new ArrayList<Location>();
-	public ArrayList<Location> getBases(Team team) { if(team==Team.RED) return bases_r; else if(team==Team.BLUE) return bases_b; else return null; }
+	public final ArrayList<Location> getBases(Team team) { if(team==Team.RED) return bases_r; else if(team==Team.BLUE) return bases_b; else return null; }
 	
 	private Hashtable<String, Team> playerTeams=new Hashtable<String,Team>(); // Player -> Team
-	public Hashtable<String, Team> getPlayerTeams() { return playerTeams; }
+	public final Hashtable<String, Team> getPlayerTeams() { return playerTeams; }
 	private Hashtable<Location, Team> chestsTeams=new Hashtable<Location,Team>(); // Location -> Team
-	public Hashtable<Location, Team> getChestTeams() { return chestsTeams; }
+	public final Hashtable<Location, Team> getChestTeams() { return chestsTeams; }
 
 	private JavaPlugin instance;
 
@@ -293,6 +293,27 @@ public class ConfRead
 			case ENNEMY_NOMANSLAND:	return "Ennemy no man's land";
 			case ENNEMY: 			return "Ennemy";
 			default:				return "Unknown";
+		}
+	}
+
+	public boolean baseExists(Location loc)
+	{
+		return baseExists(loc, Team.DAFUQ);
+	}
+
+	public boolean baseExists(Location loc, Team team)
+	{
+		if(team==Team.RED)
+			return bases_r.contains(loc);
+		else if(team==Team.BLUE)
+			return bases_b.contains(loc);
+		else
+		{
+			if(bases_r.contains(loc))
+				return true;
+			else if(bases_b.contains(loc))
+				return true;
+			return false;
 		}
 	}
 }

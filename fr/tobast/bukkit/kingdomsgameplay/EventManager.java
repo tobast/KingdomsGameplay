@@ -164,13 +164,23 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.NORMAL)
 		public void onPlayerInteractEvent(PlayerInteractEvent e)
 		{
+			if(!e.hasBlock() || e.getClickedBlock() == null)
+				return;
+
 			if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
 			{
-				Location baseLoc=null, wool_a=null, wool_b=null;
-				if(isFlag(e.getClickedBlock().getLocation().clone(), baseLoc, wool_a, wool_b)) // A flag was activated
+				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
+				if(locationArray[0]!=null) // A flag was activated
 				{
+					// Existance check
+					if(config.baseExists(locationArray[0]))
+					{
+						e.getPlayer().sendMessage("This flag is already planted!");
+						return;
+					}
+
 					// Zone check (each corner)
-					Location loc=e.getClickedBlock().getLocation().clone();
+					Location loc=locationArray[0].clone();
 					int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
 					String playerName=e.getPlayer().getName();
 					ZoneType cornerType;
@@ -204,14 +214,19 @@ public class EventManager implements Listener
 					}
 
 					Team plTeam=config.getPlayerTeam(e.getPlayer().getName());
-					colourFlag(plTeam, wool_a, wool_b);
-					config.newBase(plTeam, baseLoc);
+					colourFlag(plTeam, locationArray[1], locationArray[2]);
+					config.newBase(plTeam, locationArray[0]);
+
+					e.getPlayer().sendMessage("Congratulations, you planted a flag! The zone is now yours.");
 				}
 			}
 		}
 
-	protected boolean isFlag(Location blockPtr, Location baseLoc, Location wool_a, Location wool_b)
+	protected Location[] isFlag(Location blockPtr)
 	{
+		Location baseLoc, wool_a, wool_b;
+		Location[] nullAry = {null};
+
 		// getting block against
 		byte data=blockPtr.getBlock().getData();
 		if(data >= 8) // Pushed flag
@@ -219,11 +234,12 @@ public class EventManager implements Listener
 
 		switch(data)
 		{
-			case 1: blockPtr.add(1,0,0); break;		// East
-			case 2: blockPtr.add(-1,0,0); break;	// West
+			case 1: blockPtr.add(-1,0,0); break;		// East
+			case 2: blockPtr.add(1,0,0); break;	// West
 			case 3: blockPtr.add(0,0,-1); break;	// South
 			case 4: blockPtr.add(0,0,1); break;		// North
 		}
+			log.info("Orientation: "+String.valueOf(data));
 
 		blockPtr.add(0,-1,0);
 
@@ -231,18 +247,23 @@ public class EventManager implements Listener
 		for(int i=0;i<6;i++)
 		{
 			if(blockPtr.getBlock().getType() != Material.LOG)
-				return false;
+			{
+					log.info("No log found");
+				return nullAry;
+			}
 			blockPtr.add(0,1,0);
 		}
+		Location ptrBackup=blockPtr.clone();
 		for(int i=0;i<4;i++)
 		{
+			blockPtr=ptrBackup.clone();
 			Vector v;
-			switch(data)
+			switch(i)
 			{
-				case 1: v=new Vector(1,0,0);	break;	// East
-				case 2: v=new Vector(-1,0,0);	break;	// West
-				case 3: v=new Vector(0,0,-1);	break;	// South
-				case 4: v=new Vector(0,0,1);	break;	// North
+				case 0: v=new Vector(1,0,0);	break;	// East
+				case 1: v=new Vector(-1,0,0);	break;	// West
+				case 2: v=new Vector(0,0,-1);	break;	// South
+				case 3: v=new Vector(0,0,1);	break;	// North
 				default:v=new Vector(0,0,0);	break;	// Dafuq.
 			}
 			blockPtr.add(v);
@@ -268,6 +289,7 @@ public class EventManager implements Listener
 
 			blockPtr.add(0,-1,0);
 			blockPtr.add(v2);
+			wool_b=blockPtr.clone();
 			for(int j=0;j<3;j++)
 			{
 				if(blockPtr.getBlock().getType() != Material.WOOL)
@@ -281,13 +303,11 @@ public class EventManager implements Listener
 			if(cont)
 				continue;
 
-			blockPtr.add(v); // Go backward to the last wool
-			wool_b=blockPtr.clone();
-
-			return true; // If we've reached here, it's a flag.
+			Location[] retAry = {baseLoc, wool_a,  wool_b};
+			return retAry; // If we've reached down here, it's a flag.
 		}
 
-		return false;
+		return nullAry;
 	}
 
 	protected void colourFlag(Team team, Location wool_a, Location wool_b)
@@ -320,6 +340,7 @@ public class EventManager implements Listener
 			wool_a.add(0,-1,0);
 			v.setX(v.getX()*-1);
 			v.setZ(v.getZ()*-1);
+			wool_a.add(v);
 		}
 	}
 }
