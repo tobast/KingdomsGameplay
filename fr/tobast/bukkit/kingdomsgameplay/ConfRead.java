@@ -26,6 +26,9 @@ public class ConfRead
 	private Hashtable<Location, Team> chestsTeams=new Hashtable<Location,Team>(); // Location -> Team
 	public final Hashtable<Location, Team> getChestTeams() { return chestsTeams; }
 
+	private Location[] sponges = new Location[2];
+	public final Location[] getSponges() { return sponges; }
+
 	private JavaPlugin instance;
 
 	InitialGeneration generator=null;
@@ -84,6 +87,16 @@ public class ConfRead
 								bases_r.add(loc);
 							else if(split[4].startsWith("B"))
 								bases_b.add(loc);
+						}
+						else if(line.startsWith("SP;")) // Sponge. Line type : « SP;x;y;z;(R|B) »
+						{
+							String[] split=line.split(";");
+							Location loc=new Location(defaultWorld, Double.valueOf(split[1]), Double.valueOf(split[2]), Double.valueOf(split[3]));
+							if(split[4].startsWith("R"))
+								sponges[0]=loc;
+							else if(split[4].startsWith("B"))
+								sponges[1]=loc;
+								
 						}
 						else if(line.startsWith("PL;")) // Player. Line type : « PL;player_name;(R|B) »
 						{

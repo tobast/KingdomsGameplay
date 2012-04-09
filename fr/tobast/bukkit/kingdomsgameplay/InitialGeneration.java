@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.block.Block;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.util.Vector;
 
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 
@@ -26,6 +27,7 @@ public class InitialGeneration
 
 	private JavaPlugin instance;
 	private Location[] bases=null;
+	private Location[] sponges=null;
 
 	public InitialGeneration(JavaPlugin i_instance)
 	{
@@ -71,7 +73,7 @@ public class InitialGeneration
 
 		bases[1]=new Location(dftWorld, x1, 256, x2);
 
-		while(bases[1].getBlock().getRelative(BlockFace.DOWN).getType() == Material.AIR && bases[0].getY() > 0)
+		while(bases[1].getBlock().getRelative(BlockFace.DOWN).getType() == Material.AIR && bases[1].getY() > 0)
 			bases[1].add(0,-1,0);
 
 		drawBases();
@@ -142,6 +144,60 @@ public class InitialGeneration
 			if(rand.nextInt(2) == 0)
 				return Team.RED;
 			return Team.BLUE;
+		}
+	}
+
+	public Location[] getSponge()
+	{
+		if(sponges==null)
+			genSponges();
+		return sponges;
+	}
+
+	private void genSponges()
+	{
+		if(bases==null)
+			return;
+
+		sponges=new Location[2];
+		Vector spongeVector=new Vector(10,10,0);
+
+		for(int i=0;i<2;i++)
+		{
+			sponges[i]=bases[i].clone();
+			sponges[i].add(spongeVector);
+			sponges[i].setY(256);
+			// Fetch the floor
+			while(sponges[i].getBlock().getRelative(BlockFace.DOWN).getType() == Material.AIR && bases[i].getY() > 0)
+				sponges[i].add(0,-1,0);
+		}
+		drawSponges();
+	}
+
+	private void drawSponges()
+	{
+		if(sponges==null)
+			return;
+		for(int i=0;i<2;i++)
+		{
+			Location currPtr=sponges[i].clone();
+			currPtr.add(1,1,1);
+
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(1,0,0);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(0,1,0);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(-1,0,0);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(0,0,1);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(1,0,0);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(0,-1,0);
+			currPtr.getBlock().setType(Material.SPONGE);
+			currPtr.add(-1,0,0);
+			currPtr.getBlock().setType(Material.SPONGE);
 		}
 	}
 }

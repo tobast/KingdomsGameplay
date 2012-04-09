@@ -152,11 +152,11 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
-			if(isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+			if(config.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
 			{
 				e.getPlayer().sendMessage("You cannot break a flagpole.");
 				e.setCancelled(true);
-				break;
+				return;
 			}
 
 			if(config.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
