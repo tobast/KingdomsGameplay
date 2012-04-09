@@ -19,25 +19,26 @@ import org.bukkit.Location;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
+import org.bukkit.ChatColor;
 
 import java.util.logging.Logger;
 
-import fr.tobast.bukkit.kingdomsgameplay.ConfRead;
-import fr.tobast.bukkit.kingdomsgameplay.ConfRead.ZoneType;
+import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
+import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration; // Static var
 
 public class EventManager implements Listener
 {
-	ConfRead config;
+	MapInterpreter mapInt;
 	Logger log=Logger.getLogger("Minecraft"); // TODO REMOVE
 
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
 
-	public EventManager(ConfRead i_config)
+	public EventManager(MapInterpreter i_mapInt)
 	{
-		config=i_config;
+		mapInt=i_mapInt;
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST) // Must have the final word on the spawn point
@@ -45,15 +46,15 @@ public class EventManager implements Listener
 		{
 			Player player=e.getPlayer();
 			String playerName=player.getName();
-			Team playerTeam=config.getPlayerTeam(playerName);
+			Team playerTeam=mapInt.getPlayerTeam(playerName);
 
 			if(playerTeam==null) // The player isn't assigned to any team
-				playerTeam=config.newPlayer(player.getName());
+				playerTeam=mapInt.newPlayer(player.getName());
 
 			if(playerTeam==Team.DAFUQ)
 				player.sendMessage("There is a problem with your team definition. Please contact a server administrator.");
 			else
-				player.sendMessage("Welcome, " + player.getName() + ". You are in the " + config.teamToString(playerTeam) + " team.");
+				player.sendMessage("Welcome, " + player.getName() + ". You are in the " + mapInt.teamToString(playerTeam) + " team.");
 		}
 
 	@EventHandler(priority=EventPriority.NORMAL)
@@ -62,7 +63,7 @@ public class EventManager implements Listener
 			if(e.isBedSpawn())
 				return; 
 
-			Location spawn=config.getPlayerSpawn(e.getPlayer().getName());
+			Location spawn=mapInt.getPlayerSpawn(e.getPlayer().getName());
 			if(spawn!=null)
 			{
 				spawn.getChunk().load(); // Quite a great thing to not fall immediately
@@ -74,7 +75,7 @@ public class EventManager implements Listener
 		public void onBlockPlaceEvent(BlockPlaceEvent e)
 		{
 			//		long time=e.getBlock().getWorld().getFullTime(), day=time/24000;
-			ZoneType plZone = config.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
+			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 
 			switch(plZone)
 			{
@@ -112,7 +113,7 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.NORMAL)
 		public void onBlockDamageEvent(BlockDamageEvent e)
 		{
-			ZoneType plZone = config.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
+			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 			Player player=e.getPlayer();
 
 			switch(plZone)
@@ -152,18 +153,43 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
-			if(config.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+			if(e.getBlock().getType() == Material.SPONGE)
+			{
+				e.setCancelled(true);
+				Block b=e.getBlock();
+				if(b!=null)
+					b.setType(Material.AIR);
+
+				if(!mapInt.isSpongeAlive(mapInt.spongeOwner(e.getBlock().getLocation())))
+				{
+					Player[] players=e.getPlayer().getServer().getOnlinePlayers();
+					Team killed=mapInt.spongeOwner(e.getBlock().getLocation());
+					Team winners;
+					if(killed==Team.RED)
+						winners=Team.BLUE;
+					else if(killed==Team.BLUE)
+						winners=Team.RED;
+					else
+						return;
+
+					String message=ChatColor.RED+"The "+mapInt.teamToString(killed)+" sponge has been killed! Congratulations, "+mapInt.teamToString(winners)+" team, you won!"+ChatColor.RESET;
+					for(int i=0;i<players.length;i++)
+						players[i].sendMessage(message);
+					// TODO server restart?
+				}
+			}
+
+			if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
 			{
 				e.getPlayer().sendMessage("You cannot break a flagpole.");
 				e.setCancelled(true);
 				return;
 			}
 
-			if(config.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
+			if(mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
 			{
 				Material blockType=e.getBlock().getType();
-				if(blockType==Material.COBBLESTONE || blockType==Material.OBSIDIAN ||
-						blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
+				if(blockType==Material.COBBLESTONE || blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
 					e.setCancelled(true);
 				return;
 			}			
@@ -181,7 +207,7 @@ public class EventManager implements Listener
 				if(locationArray[0]!=null) // A flag was activated
 				{
 					// Existance check
-					if(config.baseExists(locationArray[0]))
+					if(mapInt.baseExists(locationArray[0]))
 					{
 						e.getPlayer().sendMessage("This flag is already planted!");
 						return;
@@ -195,22 +221,22 @@ public class EventManager implements Listener
 					boolean ennemyZone=false;
 
 					loc.add(InitialGeneration.baseRadius, 0, InitialGeneration.baseRadius);
-					cornerType=config.getPlayerZone(playerName, loc);
+					cornerType=mapInt.getPlayerZone(playerName, loc);
 					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
 						ennemyZone=true;
 
 					loc.add(0,0,zoneWidth*-1);
-					cornerType=config.getPlayerZone(playerName, loc);
+					cornerType=mapInt.getPlayerZone(playerName, loc);
 					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
 						ennemyZone=true;
 
 					loc.add(zoneWidth*-1, 0,0);
-					cornerType=config.getPlayerZone(playerName, loc);
+					cornerType=mapInt.getPlayerZone(playerName, loc);
 					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
 						ennemyZone=true;
 
 					loc.add(0,0,zoneWidth);
-					cornerType=config.getPlayerZone(playerName, loc);
+					cornerType=mapInt.getPlayerZone(playerName, loc);
 					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
 						ennemyZone=true;
 
@@ -221,9 +247,9 @@ public class EventManager implements Listener
 						return;
 					}
 
-					Team plTeam=config.getPlayerTeam(e.getPlayer().getName());
+					Team plTeam=mapInt.getPlayerTeam(e.getPlayer().getName());
 					colourFlag(plTeam, locationArray[1], locationArray[2]);
-					config.newBase(plTeam, locationArray[0]);
+					mapInt.newBase(plTeam, locationArray[0]);
 
 					e.getPlayer().sendMessage("Congratulations, you planted a flag! The zone is now yours.");
 				}

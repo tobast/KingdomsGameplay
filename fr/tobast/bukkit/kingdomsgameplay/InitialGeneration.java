@@ -147,7 +147,7 @@ public class InitialGeneration
 		}
 	}
 
-	public Location[] getSponge()
+	public Location[] getSponges()
 	{
 		if(sponges==null)
 			genSponges();
@@ -160,7 +160,7 @@ public class InitialGeneration
 			return;
 
 		sponges=new Location[2];
-		Vector spongeVector=new Vector(10,10,0);
+		Vector spongeVector=new Vector(10,0,10);
 
 		for(int i=0;i<2;i++)
 		{

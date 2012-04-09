@@ -6,15 +6,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
-import fr.tobast.bukkit.kingdomsgameplay.ConfRead;
+import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 
 public class KingdomsGameplay extends JavaPlugin
 {
-	protected ConfRead config=null;
+	protected MapInterpreter mapInt=null;
 	public void onEnable()
 	{
-		config=new ConfRead(this);
-		getServer().getPluginManager().registerEvents(new EventManager(config), this);
+		mapInt=new MapInterpreter(this);
+		getServer().getPluginManager().registerEvents(new EventManager(mapInt), this);
 	}
 
 	public void onDisable()
@@ -30,7 +30,7 @@ public class KingdomsGameplay extends JavaPlugin
 			if(sender instanceof Player)
 			{
 				Player player=(Player)sender;
-				player.sendMessage("You're in "+config.getZoneLabel(config.getPlayerZone(player.getName(),player.getLocation()))+" zone.");
+				player.sendMessage("You're in "+mapInt.getZoneLabel(mapInt.getPlayerZone(player.getName(),player.getLocation()))+" zone.");
 				return true;
 			}
 			else
