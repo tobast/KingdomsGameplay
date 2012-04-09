@@ -152,12 +152,20 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
+			if(isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+			{
+				e.getPlayer().sendMessage("You cannot break a flagpole.");
+				e.setCancelled(true);
+				break;
+			}
+
 			if(config.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
 			{
 				Material blockType=e.getBlock().getType();
 				if(blockType==Material.COBBLESTONE || blockType==Material.OBSIDIAN ||
 						blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
 					e.setCancelled(true);
+				return;
 			}			
 		}
 
@@ -234,23 +242,18 @@ public class EventManager implements Listener
 
 		switch(data)
 		{
-			case 1: blockPtr.add(-1,0,0); break;		// East
-			case 2: blockPtr.add(1,0,0); break;	// West
-			case 3: blockPtr.add(0,0,-1); break;	// South
-			case 4: blockPtr.add(0,0,1); break;		// North
+			case 1: blockPtr.add(-1,0,0);	break;	// East
+			case 2: blockPtr.add(1,0,0);	break;	// West
+			case 3: blockPtr.add(0,0,-1);	break;	// South
+			case 4: blockPtr.add(0,0,1);	break;	// North
 		}
-			log.info("Orientation: "+String.valueOf(data));
-
 		blockPtr.add(0,-1,0);
 
 		baseLoc=blockPtr.clone();
 		for(int i=0;i<6;i++)
 		{
 			if(blockPtr.getBlock().getType() != Material.LOG)
-			{
-					log.info("No log found");
 				return nullAry;
-			}
 			blockPtr.add(0,1,0);
 		}
 		Location ptrBackup=blockPtr.clone();

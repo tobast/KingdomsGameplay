@@ -316,5 +316,20 @@ public class ConfRead
 			return false;
 		}
 	}
+
+	public Team isBaseLocation(Location loc)
+	{
+		for(int i=0;i<bases_r.size();i++)
+		{
+			if(loc.getX()==bases_r.get(i).getX() && loc.getZ()==bases_r.get(i).getZ())
+				return Team.RED;
+		}
+		for(int i=0;i<bases_b.size();i++)
+		{
+			if(loc.getX()==bases_b.get(i).getX() && loc.getZ()==bases_r.get(i).getZ())
+				return Team.BLUE;
+		}
+		return null;
+	}
 }
 
