@@ -17,8 +17,6 @@ public class ConfRead
 {
 	private static final String confpath="plugins/KingdomsGameplay/data.cfg";
 	
-	// Corners of each base
-//	private Location[][] bases = new Location[2][3];
 	private ArrayList<Location> bases_r = new ArrayList<Location>();
 	private ArrayList<Location> bases_b = new ArrayList<Location>();
 	public ArrayList<Location> getBases(Team team) { if(team==Team.RED) return bases_r; else if(team==Team.BLUE) return bases_b; else return null; }
@@ -34,10 +32,14 @@ public class ConfRead
 
 		Logger log=Logger.getLogger("Minecraft"); // TODO DELETE
 
+	enum ZoneType
+	{
+		ALLY, ALLY_NOMANSLAND, NEUTRAL, ENNEMY_NOMANSLAND, ENNEMY
+	}
+
 	public ConfRead(JavaPlugin i_instance)
 	{
 		this.instance=i_instance;
-		
 
 		generator = new InitialGeneration(instance);
 
@@ -55,10 +57,7 @@ public class ConfRead
 					Location[] bases=generator.getBases();
 					bases_r.add(bases[0]);
 					bases_b.add(bases[1]);
-/*
-					String baseline="ZN;" + String.valueOf(bases[0][0].getX())+":"+String.valueOf(bases[0][0].getZ()) + "/" + String.valueOf(bases[0][1].getX())+":"+String.valueOf(bases[0][1].getZ()) + ";"
-						+ String.valueOf(bases[1][0].getX())+":"+String.valueOf(bases[1][0].getZ()) + "/" + String.valueOf(bases[1][1].getX())+":"+String.valueOf(bases[1][1].getZ());
-*/
+
 					writer.write("FL;"+bases[0].getX()+";"+bases[0].getY()+";"+bases[0].getZ()+";R\n");
 					writer.write("FL;"+bases[1].getX()+";"+bases[1].getY()+";"+bases[1].getZ()+";B\n");
 
@@ -77,28 +76,6 @@ public class ConfRead
 					World defaultWorld=instance.getServer().getWorld("world");
 					while ((line=reader.readLine()) != null)
 					{	
-
-					/*
-						// ZoNes : line type « ZN;x_red_a:z_red_a|x_red_b:z_red_b;x_blue_a:z_blue_a|x_blue_b:z_blue_b »
-						// Put in a nutshell, Zone Red ; Zone Blue, where a zone contains two locations separated by a |, where each location is a x and a z coordinate separated by a :.
-						if(line.startsWith("ZN;"))
-						{
-							String[] zones=line.split(";");
-							for(int i=1;i<=2;i++)
-							{
-								String[] zone=zones[i].split("/");
-								String[] pointA=zone[0].split(":");
-								String[] pointB=zone[1].split(":");
-
-								log.info("zones="+zones[i]);
-								log.info("zone="+zone[0]+","+zone[1]);
-//								log.info("A="+pointA[0]+","+pointA[1] + " ; B="+pointB[0]+","+pointB[1]);
-
-								bases[i-1][0]=new Location(defaultWorld, Double.valueOf(pointA[0]), 0, Double.valueOf(pointA[1]));
-								bases[i-1][1]=new Location(defaultWorld, Double.valueOf(pointB[0]), 0, Double.valueOf(pointB[1]));
-							}
-						}
-					*/
 						if(line.startsWith("FL;")) // Flag. Line type : « FL;x;y;z;(R|B) »
 						{
 							String[] split=line.split(";");
@@ -201,6 +178,100 @@ public class ConfRead
 		
 		loc.add(0,0,2);
 		return loc;
+	}
+
+	public ZoneType getPlayerZone(String playerName, Location plLoc)
+	{
+		Team plTeam=getPlayerTeam(playerName);
+		ZoneType toRet=ZoneType.NEUTRAL;
+		
+		if(plTeam == Team.BLUE) // First process the ennemy bases, for no man's lands
+		{
+			for(int i=0;i<bases_r.size();i++)
+			{
+				double bx=bases_r.get(i).getX();
+				if(plLoc.getX() <= bx + generator.baseRadius*2 && plLoc.getX() >= bx - generator.baseRadius * 2)
+				{
+					double bz=bases_r.get(i).getZ();
+					if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // Ennemy no man's land
+					{
+						if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
+							plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ennemy base
+							return ZoneType.ENNEMY;
+						else
+							toRet=ZoneType.ENNEMY_NOMANSLAND; // Maybe there's an ennemy base too!
+					}
+				}
+			}
+			if(toRet!=ZoneType.NEUTRAL)
+				return toRet; // No base found, so.
+		}
+
+		for(int i=0;i<bases_b.size();i++)
+		{
+			double bx=bases_b.get(i).getX();
+			if(plLoc.getX() <= bx + generator.baseRadius*2 && plLoc.getX() >= bx - generator.baseRadius * 2)
+			{
+				double bz=bases_b.get(i).getZ();
+				if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // no man's land
+				{
+					if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
+						plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // base
+					{
+						if(plTeam==Team.RED)
+							return ZoneType.ENNEMY;
+						else
+							return ZoneType.ALLY;
+					}
+					else
+					{
+						if(plTeam==Team.RED)
+							toRet=ZoneType.ENNEMY_NOMANSLAND;
+						else
+							toRet=ZoneType.ALLY_NOMANSLAND; // Maybe there's a base too!
+					}
+				}
+			}
+		}
+		if(toRet != ZoneType.NEUTRAL)
+			return toRet; // No base found, so.
+
+		if(plTeam == Team.RED) // First process the ennemy bases, for no man's lands
+		{
+			for(int i=0;i<bases_r.size();i++)
+			{
+				double bx=bases_r.get(i).getX();
+				if(plLoc.getX() <= bx + generator.baseRadius*2 && plLoc.getX() >= bx - generator.baseRadius * 2)
+				{
+					double bz=bases_r.get(i).getZ();
+					if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // Ally no man's land
+					{
+						if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
+							plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ally base
+							return ZoneType.ALLY;
+						else
+							toRet=ZoneType.ALLY_NOMANSLAND; // Maybe there's an ally base too!
+					}
+				}
+			}
+			if(toRet != ZoneType.NEUTRAL)
+				return toRet; // No base found, so.
+		}
+
+		return ZoneType.NEUTRAL;
+	}
+
+	public String getZoneLabel(ZoneType type)
+	{
+		switch(type)
+		{
+			case ALLY:				return "Ally";
+			case ALLY_NOMANSLAND:	return "Ally no man's land";
+			case NEUTRAL:			return "Neutral";
+			case ENNEMY_NOMANSLAND:	return "Ennemy no man's land";
+			case ENNEMY: 			return "Ennemy";
+			default:				return "Unknown";
+		}
 	}
 }
 

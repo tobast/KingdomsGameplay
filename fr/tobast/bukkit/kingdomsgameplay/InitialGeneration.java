@@ -19,9 +19,9 @@ public class InitialGeneration
 {
 	// PARAMETERS - Feel free to change that
 
-	private static final int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
-	private static final int rangeToBase1=500; // Maximum distance of base 2 to the base 1
-	private static final int baseRadius=50; // Side lenght of a base
+	public static final int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
+	public static final int rangeToBase1=200; // Maximum distance of base 2 to the base 1
+	public static final int baseRadius=25; // Radius of a base
 
 	// END PARAMETERS
 

@@ -2,3 +2,11 @@ name: KingdomsGameplay
 main: fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay
 version: 0.9
 author: Tobast
+
+commands:
+    zone:
+        description: Prints the zone type.
+        usage: /zone
+        permission: kingdomsgameplay.zone
+        permission-message: You don't have the permission to do this!
+
