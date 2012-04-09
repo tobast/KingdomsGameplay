@@ -1,4 +1,4 @@
-package fr.tobast.bukkit.fallenkingdom;
+package fr.tobast.bukkit.kingdomsgameplay;
 
 import java.lang.Double;
 import java.io.*;
@@ -10,12 +10,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import fr.tobast.bukkit.fallenkingdom.Team;
-import fr.tobast.bukkit.fallenkingdom.InitialGeneration;
+import fr.tobast.bukkit.kingdomsgameplay.Team;
+import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration;
 
 public class ConfRead
 {
-	private static final String confpath="plugins/FallenKingdom/data.cfg";
+	private static final String confpath="plugins/KingdomsGameplay/data.cfg";
 	
 	// Corners of each base
 //	private Location[][] bases = new Location[2][3];

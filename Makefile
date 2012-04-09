@@ -1,4 +1,4 @@
-TARGET=fallenkingdom
+TARGET=kingdomsgameplay
 PKGPATH=fr/tobast/bukkit/$(TARGET)
 
 all:

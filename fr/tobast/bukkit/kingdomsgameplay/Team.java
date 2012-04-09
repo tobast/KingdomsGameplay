@@ -1,4 +1,4 @@
-package fr.tobast.bukkit.fallenkingdom;
+package fr.tobast.bukkit.kingdomsgameplay;
 
 public enum Team
 {

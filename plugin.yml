@@ -1,4 +1,4 @@
-name: FallenKingdom
-main: fr.tobast.bukkit.fallenkingdom.FallenKingdom
+name: KingdomsGameplay
+main: fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay
 version: 0.9
 author: Tobast

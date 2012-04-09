@@ -1,4 +1,4 @@
-package fr.tobast.bukkit.fallenkingdom;
+package fr.tobast.bukkit.kingdomsgameplay;
 
 import java.lang.Math;
 import java.util.Random;
@@ -13,7 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.util.Vector;
 
-import fr.tobast.bukkit.fallenkingdom.Team;
+import fr.tobast.bukkit.kingdomsgameplay.Team;
 
 public class InitialGeneration
 {

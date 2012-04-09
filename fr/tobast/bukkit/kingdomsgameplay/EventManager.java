@@ -1,4 +1,4 @@
-package fr.tobast.bukkit.fallenkingdom;
+package fr.tobast.bukkit.kingdomsgameplay;
 
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
@@ -11,8 +11,8 @@ import org.bukkit.Chunk;
 
 import java.util.logging.Logger;
 
-import fr.tobast.bukkit.fallenkingdom.ConfRead;
-import fr.tobast.bukkit.fallenkingdom.Team;
+import fr.tobast.bukkit.kingdomsgameplay.ConfRead;
+import fr.tobast.bukkit.kingdomsgameplay.Team;
 
 public class EventManager implements Listener
 {

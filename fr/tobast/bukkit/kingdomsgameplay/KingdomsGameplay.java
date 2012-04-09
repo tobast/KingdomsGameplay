@@ -1,10 +1,10 @@
-package fr.tobast.bukkit.fallenkingdom;
+package fr.tobast.bukkit.kingdomsgameplay;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import fr.tobast.bukkit.fallenkingdom.EventManager;
-import fr.tobast.bukkit.fallenkingdom.ConfRead;
+import fr.tobast.bukkit.kingdomsgameplay.EventManager;
+import fr.tobast.bukkit.kingdomsgameplay.ConfRead;
 
-public class FallenKingdom extends JavaPlugin
+public class KingdomsGameplay extends JavaPlugin
 {
 	public void onEnable()
 	{
