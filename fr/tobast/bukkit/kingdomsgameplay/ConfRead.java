@@ -159,6 +159,28 @@ public class ConfRead
 		
 		return plTeam;
 	}
+
+	public void newBase(Team team, Location loc)
+	{
+		if(team==Team.RED)
+			bases_r.add(loc);
+		else
+			bases_b.add(loc);
+
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath), true));
+			try {
+				String line="FL;"+String.valueOf(loc.getX())+";"+String.valueOf(loc.getY())+";"+String.valueOf(loc.getZ())+";"+teamToId(team);
+				writer.write(line+"\n");
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public Team getPlayerTeam(String playerName)
 	{
