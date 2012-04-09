@@ -14,7 +14,7 @@ public class KingdomsGameplay extends JavaPlugin
 	public void onEnable()
 	{
 		mapInt=new MapInterpreter(this);
-		getServer().getPluginManager().registerEvents(new EventManager(mapInt), this);
+		getServer().getPluginManager().registerEvents(new EventManager(mapInt, this), this);
 	}
 
 	public void onDisable()

@@ -20,6 +20,7 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
 
@@ -27,6 +28,7 @@ import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration; // Static var
+import fr.tobast.bukkit.kingdomsgameplay.RunnableSpongeGrow;
 
 public class EventManager implements Listener
 {
@@ -36,9 +38,12 @@ public class EventManager implements Listener
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
 
-	public EventManager(MapInterpreter i_mapInt)
+	JavaPlugin instance;
+
+	public EventManager(MapInterpreter i_mapInt, JavaPlugin instance)
 	{
 		mapInt=i_mapInt;
+		this.instance=instance;
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST) // Must have the final word on the spawn point
@@ -201,6 +206,7 @@ public class EventManager implements Listener
 			if(!e.hasBlock() || e.getClickedBlock() == null)
 				return;
 
+			// FLAG PLANTING
 			if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
 			{
 				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
@@ -253,6 +259,19 @@ public class EventManager implements Listener
 
 					e.getPlayer().sendMessage("Congratulations, you planted a flag! The zone is now yours.");
 				}
+			}
+
+			// SPONGE FEEDING
+			else if(e.getClickedBlock().getType()==Material.SPONGE && e.getPlayer().getItemInHand().getType() == Material.SUGAR)
+			{
+				ItemStack st=e.getPlayer().getItemInHand();
+				if(st.getAmount()<1)
+					return;
+
+				st.setAmount(st.getAmount()-1);
+				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation()), 150L); // TODO set duration
+
+				e.getPlayer().sendMessage("You successfully fed the sponge.");
 			}
 		}
 
