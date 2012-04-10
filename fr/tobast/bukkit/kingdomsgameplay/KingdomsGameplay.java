@@ -55,6 +55,13 @@ public class KingdomsGameplay extends JavaPlugin
 				return true;
 			}
 		}
+
+		else if(label.equals("daynum"))
+		{
+			long day=mapInt.getSponges()[0].getWorld().getFullTime() / 24000;
+			sender.sendMessage("Current day is day "+String.valueOf(day)+".");
+			return true;
+		}
 		
 		else if(label.equals("teamset"))
 		{
