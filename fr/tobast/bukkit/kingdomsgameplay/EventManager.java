@@ -380,7 +380,7 @@ public class EventManager implements Listener
 	public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
 	{
 		long day=e.getEntity().getLocation().getWorld().getFullTime()/24000; // A bit hacky, huh?
-		if(e.getEntityType()==EntityType.PLAYER && day >= days_playerHarming)
+		if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
 		{
 			if(e.getDamager().getType()==EntityType.PLAYER)
 			{
