@@ -20,7 +20,7 @@ public class InitialGeneration
 	// PARAMETERS - Feel free to change that
 
 	public static final int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
-	public static final int rangeToBase1=200; // Maximum distance of base 2 to the base 1
+	public static final int rangeToBase1=150; // Maximum distance of base 2 to the base 1
 	public static final int baseRadius=25; // Radius of a base
 
 	// END PARAMETERS
