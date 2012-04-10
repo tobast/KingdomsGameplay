@@ -7,6 +7,16 @@ commands:
     zone:
         description: Prints the zone type.
         usage: /zone
-        permission: kingdomsgameplay.zone
+        permission: KingdomsGameplay.zone
+        permission-message: You don't have the permission to do this!
+    team:
+        description: Prints a player team
+        usage: /team player
+        permission: KingdomsGameplay.team
+        permission-message: You don't have the permission to do this!
+    teamset:
+        description: Sets a player team
+        usage: /teamset player (B|R)
+        permission: KingdomsGameplay.admin.teamset
         permission-message: You don't have the permission to do this!
 

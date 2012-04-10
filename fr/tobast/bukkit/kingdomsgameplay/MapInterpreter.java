@@ -189,6 +189,25 @@ public class MapInterpreter
 		return plTeam;
 	}
 
+	public void changeTeam(String playerName, Team newTeam)
+	{
+		playerTeams.remove(playerName);
+		playerTeams.put(playerName, newTeam);
+
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath))); // Open in truncate mode
+			try {
+				rewriteConfig(writer);
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void newBase(Team team, Location loc)
 	{
 		if(team==Team.RED)
