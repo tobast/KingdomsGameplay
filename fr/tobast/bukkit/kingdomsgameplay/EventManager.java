@@ -79,6 +79,12 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST) // Final word
 		public void onBlockPlaceEvent(BlockPlaceEvent e)
 		{
+			if(e.getBlock().getType() == Material.CHEST)
+			{
+				Team plTeam=mapInt.getPlayerTeam(e.getPlayer().getName());
+				mapInt.newChest(e.getBlock().getLocation(), plTeam);
+			}
+
 			//		long time=e.getBlock().getWorld().getFullTime(), day=time/24000;
 			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 
@@ -158,6 +164,12 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
+			if(e.getBlock().getType() == Material.CHEST)
+			{
+				// TODO chest protection on first days
+				mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
+			}
+
 			if(e.getBlock().getType() == Material.SPONGE)
 			{
 				e.setCancelled(true);

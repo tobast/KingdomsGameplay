@@ -5,6 +5,9 @@ import java.io.*;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.logging.Logger;
+import java.util.Enumeration;
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
@@ -17,15 +20,17 @@ import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration;
 public class MapInterpreter
 {
 	private static final String confpath="plugins/KingdomsGameplay/data.cfg";
-	
+
 	private ArrayList<Location> bases_r = new ArrayList<Location>();
 	private ArrayList<Location> bases_b = new ArrayList<Location>();
 	public final ArrayList<Location> getBases(Team team) { if(team==Team.RED) return bases_r; else if(team==Team.BLUE) return bases_b; else return null; }
-	
+
+	private ArrayList<Location> chests_r = new ArrayList<Location>();
+	private ArrayList<Location> chests_b = new ArrayList<Location>();
+	public final ArrayList<Location> getChests(Team team) { if(team==Team.RED) return chests_r; else if(team==Team.BLUE) return chests_b; else return null; }
+
 	private Hashtable<String, Team> playerTeams=new Hashtable<String,Team>(); // Player -> Team
 	public final Hashtable<String, Team> getPlayerTeams() { return playerTeams; }
-	private Hashtable<Location, Team> chestsTeams=new Hashtable<Location,Team>(); // Location -> Team
-	public final Hashtable<Location, Team> getChestTeams() { return chestsTeams; }
 
 	private Location[] sponges = new Location[2];
 	public final Location[] getSponges() { return sponges; }
@@ -34,7 +39,7 @@ public class MapInterpreter
 
 	InitialGeneration generator=null;
 
-		Logger log=Logger.getLogger("Minecraft"); // TODO DELETE
+	Logger log=Logger.getLogger("Minecraft"); // TODO DELETE
 
 	enum ZoneType
 	{
@@ -101,7 +106,7 @@ public class MapInterpreter
 								sponges[0]=loc;
 							else if(split[4].startsWith("B"))
 								sponges[1]=loc;
-								
+
 						}
 						else if(line.startsWith("PL;")) // Player. Line type : « PL;player_name;(R|B) »
 						{
@@ -113,8 +118,10 @@ public class MapInterpreter
 						{
 							String[] split=line.split(";");
 							Location loc=new Location(defaultWorld, Double.valueOf(split[1]), Double.valueOf(split[2]), Double.valueOf(split[3]));
-							
-							chestsTeams.put(loc, teamFromId(split[4]));
+							if(split[4].startsWith("R"))
+								chests_r.add(loc);
+							else if(split[4].startsWith("B"))
+								chests_b.add(loc);
 						}
 					}
 				}
@@ -136,7 +143,7 @@ public class MapInterpreter
 			return Team.BLUE;
 		return Team.DAFUQ;
 	}
-	
+
 	protected String teamToId(Team team)
 	{
 		if(team==Team.RED)
@@ -145,7 +152,7 @@ public class MapInterpreter
 			return "B";
 		return "";
 	}
-	
+
 	public String teamToString(Team team)
 	{
 		if(team==Team.RED)
@@ -158,7 +165,7 @@ public class MapInterpreter
 	public Team newPlayer(String playerName)
 	{
 		Team plTeam=generator.newPlayer(playerTeams);
-		
+
 		playerTeams.put(playerName, plTeam);
 
 		try {
@@ -174,7 +181,7 @@ public class MapInterpreter
 		catch(IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		return plTeam;
 	}
 
@@ -199,7 +206,68 @@ public class MapInterpreter
 			e.printStackTrace();
 		}
 	}
-	
+
+	public void newChest(Location loc, Team team)
+	{
+		ArrayList<Location> list;
+		if(team==Team.RED)
+			list=chests_r;
+		else if(team==Team.BLUE)
+			list=chests_b;
+		else
+			return;
+
+		if(loc==null || list.contains(loc))
+			return;
+
+		list.add(loc);
+
+		// File processing
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath), true));
+			try {
+				String line="CH;"+String.valueOf(loc.getX())+";"+String.valueOf(loc.getY())+";"+String.valueOf(loc.getZ())+";"+teamToId(team);
+				writer.write(line+"\n");
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void delChest(Location loc, Team team)
+	{
+		ArrayList list;
+		if(team==Team.RED)
+			list=chests_r;
+		else if(team==Team.BLUE)
+			list=chests_b;
+		else
+			return;
+
+		if(loc==null || !list.contains(loc))
+			return;
+
+		list.remove(list.indexOf(loc));
+
+		// File processing
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath))); // Open in truncate mode
+			try {
+				rewriteConfig(writer);
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public Team getPlayerTeam(String playerName)
 	{
 		return playerTeams.get(playerName);
@@ -215,7 +283,7 @@ public class MapInterpreter
 		else
 			return null;
 
-		
+
 		loc.add(0,0,2);
 		return loc;
 	}
@@ -224,7 +292,7 @@ public class MapInterpreter
 	{
 		Team plTeam=getPlayerTeam(playerName);
 		ZoneType toRet=ZoneType.NEUTRAL;
-		
+
 		if(plTeam == Team.BLUE) // First process the ennemy bases, for no man's lands
 		{
 			for(int i=0;i<bases_r.size();i++)
@@ -236,7 +304,7 @@ public class MapInterpreter
 					if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // Ennemy no man's land
 					{
 						if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
-							plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ennemy base
+								plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ennemy base
 							return ZoneType.ENNEMY;
 						else
 							toRet=ZoneType.ENNEMY_NOMANSLAND; // Maybe there's an ennemy base too!
@@ -256,7 +324,7 @@ public class MapInterpreter
 				if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // no man's land
 				{
 					if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
-						plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // base
+							plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // base
 					{
 						if(plTeam==Team.RED)
 							return ZoneType.ENNEMY;
@@ -287,7 +355,7 @@ public class MapInterpreter
 					if(plLoc.getZ() <= bz + generator.baseRadius*2 && plLoc.getZ() >= bz - generator.baseRadius*2) // Ally no man's land
 					{
 						if(plLoc.getX() <= bx + generator.baseRadius && plLoc.getX() >= bx - generator.baseRadius &&
-							plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ally base
+								plLoc.getZ() <= bz+ generator.baseRadius && plLoc.getZ() >= bz - generator.baseRadius) // Ally base
 							return ZoneType.ALLY;
 						else
 							toRet=ZoneType.ALLY_NOMANSLAND; // Maybe there's an ally base too!
@@ -350,12 +418,21 @@ public class MapInterpreter
 		return null;
 	}
 
+	public Team chestOwner(Location loc)
+	{
+		if(chests_r.contains(loc))
+			return Team.RED;
+		else if(chests_b.contains(loc))
+			return Team.BLUE;
+		return null;
+	}
+
 	public Team spongeOwner(Location loc)
 	{
 		for(int i=0;i<2;i++)
 		{
 			if(loc.getX() >= sponges[i].getX() && loc.getY() >= sponges[i].getY() && loc.getZ() >= sponges[i].getZ() &&
-				loc.getX() <= sponges[i].getX()+3 && loc.getY() <= sponges[i].getY()+3 && loc.getZ() <= sponges[i].getZ()+3)
+					loc.getX() <= sponges[i].getX()+3 && loc.getY() <= sponges[i].getY()+3 && loc.getZ() <= sponges[i].getZ()+3)
 			{
 				if(i==0)
 					return Team.RED;
@@ -391,6 +468,53 @@ public class MapInterpreter
 			loc.add(1,-4,0);
 		}
 		return false;
+	}
+
+	protected void rewriteConfig(Writer writer)
+	{
+		try {
+			// Sponges
+			writer.write("SP;"+sponges[0].getX()+";"+sponges[0].getY()+";"+sponges[0].getZ()+";R\n");
+			writer.write("SP;"+sponges[1].getX()+";"+sponges[1].getY()+";"+sponges[1].getZ()+";B\n");
+
+			// Bases
+			for(int i=0;i<bases_r.size();i++)
+			{
+				String line="FL;"+String.valueOf(bases_r.get(i).getX())+";"+String.valueOf(bases_r.get(i).getY())+";"+String.valueOf(bases_r.get(i).getZ())+";R";
+				writer.write(line+"\n");
+			}
+			for(int i=0;i<bases_b.size();i++)
+			{
+				String line="FL;"+String.valueOf(bases_b.get(i).getX())+";"+String.valueOf(bases_b.get(i).getY())+";"+String.valueOf(bases_b.get(i).getZ())+";B";
+				writer.write(line+"\n");
+			}
+
+			// Chests
+			for(int i=0;i<chests_r.size();i++)
+			{
+				String line="FL;"+String.valueOf(chests_r.get(i).getX())+";"+String.valueOf(chests_r.get(i).getY())+";"+String.valueOf(chests_r.get(i).getZ())+";R";
+				writer.write(line+"\n");
+			}
+			for(int i=0;i<chests_b.size();i++)
+			{
+				String line="FL;"+String.valueOf(chests_b.get(i).getX())+";"+String.valueOf(chests_b.get(i).getY())+";"+String.valueOf(chests_b.get(i).getZ())+";B";
+				writer.write(line+"\n");
+			}
+
+			// Players
+			Enumeration<String> keys=playerTeams.keys();
+			Collection<Team> valuesCol=playerTeams.values();
+			Iterator<Team> values=valuesCol.iterator();
+
+			while(keys.hasMoreElements() && values.hasNext())
+			{
+				String line="PL;"+keys.nextElement()+";"+teamToId(values.next());
+				writer.write(line+"\n");
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
 
