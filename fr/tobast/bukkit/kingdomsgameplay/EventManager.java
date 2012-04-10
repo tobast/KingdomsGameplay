@@ -264,13 +264,24 @@ public class EventManager implements Listener
 			// SPONGE FEEDING
 			else if(e.getClickedBlock().getType()==Material.SPONGE && e.getPlayer().getItemInHand().getType() == Material.SUGAR)
 			{
+				Location spongeRef;
+				Team plTeam=mapInt.spongeOwner(e.getClickedBlock().getLocation());
+				if(plTeam == Team.RED)
+					spongeRef=mapInt.getSponges()[0];
+				else if(plTeam==Team.BLUE)
+					spongeRef=mapInt.getSponges()[1];
+				else
+				{
+					e.getPlayer().sendMessage("You cannot feed this sponge!");
+					return;
+				}
+
 				ItemStack st=e.getPlayer().getItemInHand();
 				if(st.getAmount()<1)
 					return;
-
 				st.setAmount(st.getAmount()-1);
-				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation()), 150L); // TODO set duration
 
+				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef), 3600L); // 3600 ticks = 3*60*20 = 3min
 				e.getPlayer().sendMessage("You successfully fed the sponge.");
 			}
 		}
