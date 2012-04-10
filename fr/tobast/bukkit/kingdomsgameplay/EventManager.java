@@ -3,6 +3,7 @@ package fr.tobast.bukkit.kingdomsgameplay;
 import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -10,6 +11,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.EntityType;
 import org.bukkit.block.Block;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +40,7 @@ public class EventManager implements Listener
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
 	public static final int days_playerHarming=3;
-	public static final int days_baseOpening=6;
+	public static final int days_baseBreaking=6;
 	public static final int days_chestOpening=9;
 	public static final int days_spongeHarming=12;
 
@@ -101,11 +103,12 @@ public class EventManager implements Listener
 			//		long time=e.getBlock().getWorld().getFullTime(), day=time/24000;
 			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 
+			ItemStack currSt;
 			switch(plZone)
 			{
 				case NEUTRAL:
 				case ALLY_NOMANSLAND:
-					ItemStack currSt=e.getPlayer().getItemInHand();
+					currSt=e.getPlayer().getItemInHand();
 					if(currSt.getAmount() >= 2)
 						currSt.setAmount(currSt.getAmount()-2);
 					else
@@ -118,14 +121,14 @@ public class EventManager implements Listener
 				case ENNEMY_NOMANSLAND:
 				case ENNEMY:
 					Material blockType=e.getBlock().getType();
-					if(blockType!=Material.TNT && blockType!=LEVER)
+					if(blockType!=Material.TNT && blockType!=Material.LEVER)
 					{
 						e.setCancelled(true);
 						e.getPlayer().sendMessage("You cannot build on the ennemy base and the surrounding no man's land, except TNT and levers!");
 					}
 					else
 					{
-						ItemStack currSt=e.getPlayer().getItemInHand();
+						currSt=e.getPlayer().getItemInHand();
 						if(currSt.getAmount() >= 4) // 5 to 1
 							currSt.setAmount(currSt.getAmount()-4);
 						else
@@ -144,6 +147,7 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.NORMAL)
 		public void onBlockDamageEvent(BlockDamageEvent e)
 		{
+			long day=e.getBlock().getLocation().getWorld().getFullTime() / 24000;
 			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 			Player player=e.getPlayer();
 
@@ -160,10 +164,23 @@ public class EventManager implements Listener
 					break;
 
 				case ENNEMY_NOMANSLAND:
+					if(day < days_baseBreaking)
+					{
+						e.setCancelled(true);
+						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						return;
+					}
 					player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
 					break;
 
 				case ENNEMY:
+					if(day < days_baseBreaking)
+					{
+						e.setCancelled(true);
+						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						return;
+					}
+
 					Material blockType=e.getBlock().getType();
 					if(blockType==Material.COBBLESTONE || blockType==Material.OBSIDIAN ||
 							blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
@@ -184,14 +201,26 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
+			long day=e.getBlock().getLocation().getWorld().getFullTime() / 24000;
 			if(e.getBlock().getType() == Material.CHEST)
 			{
-				// TODO chest protection on first days
+				if(day < days_chestOpening && mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getBlock().getLocation()))
+				{
+					e.setCancelled(true);
+					e.getPlayer().sendMessage("You cannot break ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
+					return;
+				}
 				mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
 			}
 
 			if(e.getBlock().getType() == Material.SPONGE)
 			{
+				if(day < days_spongeHarming)
+				{
+					e.setCancelled(true);
+					e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
+					return;
+				}
 				e.setCancelled(true);
 				Block b=e.getBlock();
 				if(b!=null)
@@ -237,6 +266,17 @@ public class EventManager implements Listener
 		{
 			if(!e.hasBlock() || e.getClickedBlock() == null)
 				return;
+
+			if(e.getClickedBlock().getType() == Material.CHEST)
+			{
+				if(e.getClickedBlock().getLocation().getWorld().getFullTime()/24000 < days_chestOpening &&
+					mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
+				{
+					e.setCancelled(true);
+					e.getPlayer().sendMessage("You cannot steal from ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
+					return;
+				}
+			}
 
 			// FLAG PLANTING
 			if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
@@ -317,6 +357,24 @@ public class EventManager implements Listener
 				e.getPlayer().sendMessage("You successfully fed the sponge.");
 			}
 		}
+
+	@EventHandler(priority=EventPriority.HIGH)
+	public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
+	{
+		long day=e.getEntity().getLocation().getWorld().getFullTime()/24000; // A bit hacky, huh?
+		if(e.getEntityType()==EntityType.PLAYER && day >= days_playerHarming)
+		{
+			if(e.getDamager().getType()==EntityType.PLAYER)
+			{
+				e.setCancelled(true);
+				((Player)e.getDamager()).sendMessage("You cannot hurt a player before day "+String.valueOf(days_playerHarming)+"!");
+			}
+			else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
+			{
+				e.setCancelled(true);
+			}
+		}
+	}
 
 	protected Location[] isFlag(Location blockPtr)
 	{
