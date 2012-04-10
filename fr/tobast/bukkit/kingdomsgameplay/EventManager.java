@@ -116,17 +116,24 @@ public class EventManager implements Listener
 					break;
 
 				case ENNEMY_NOMANSLAND:
+				case ENNEMY:
 					Material blockType=e.getBlock().getType();
-					if(blockType!=Material.TNT)
+					if(blockType!=Material.TNT && blockType!=LEVER)
 					{
 						e.setCancelled(true);
-						e.getPlayer().sendMessage("You cannot build on the ennemy no man's land, except TNT!");
+						e.getPlayer().sendMessage("You cannot build on the ennemy base and the surrounding no man's land, except TNT and levers!");
 					}
-					break;
-
-				case ENNEMY:
-					e.setCancelled(true);
-					e.getPlayer().sendMessage("You cannot build on the ennemy's base!");
+					else
+					{
+						ItemStack currSt=e.getPlayer().getItemInHand();
+						if(currSt.getAmount() >= 4) // 5 to 1
+							currSt.setAmount(currSt.getAmount()-4);
+						else
+						{
+							e.setCancelled(true);
+							e.getPlayer().sendMessage("You're in ennemy zone, placing 1 TNT or lever costs 5!");
+						}
+					}
 					break;
 
 				default:
