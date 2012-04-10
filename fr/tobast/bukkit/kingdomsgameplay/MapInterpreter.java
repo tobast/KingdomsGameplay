@@ -66,6 +66,8 @@ public class MapInterpreter
 					Location[] bases=generator.getBases();
 					bases_r.add(bases[0]);
 					bases_b.add(bases[1]);
+					bases[0].getChunk().load();
+					bases[1].getChunk().load();
 
 					writer.write("FL;"+bases[0].getX()+";"+bases[0].getY()+";"+bases[0].getZ()+";R\n");
 					writer.write("FL;"+bases[1].getX()+";"+bases[1].getY()+";"+bases[1].getZ()+";B\n");
@@ -97,6 +99,8 @@ public class MapInterpreter
 								bases_r.add(loc);
 							else if(split[4].startsWith("B"))
 								bases_b.add(loc);
+
+							loc.getChunk().load();
 						}
 						else if(line.startsWith("SP;")) // Sponge. Line type : « SP;x;y;z;(R|B) »
 						{

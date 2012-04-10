@@ -58,7 +58,16 @@ public class EventManager implements Listener
 			Team playerTeam=mapInt.getPlayerTeam(playerName);
 
 			if(playerTeam==null) // The player isn't assigned to any team
+			{
 				playerTeam=mapInt.newPlayer(player.getName());
+
+				Location spawn=mapInt.getPlayerSpawn(playerName);
+				if(spawn!=null)
+				{
+					spawn.getChunk().load();
+					player.teleport(spawn);
+				}
+			}
 
 			if(playerTeam==Team.DAFUQ)
 				player.sendMessage("There is a problem with your team definition. Please contact a server administrator.");
