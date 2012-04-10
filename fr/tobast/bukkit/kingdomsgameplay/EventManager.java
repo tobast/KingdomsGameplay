@@ -37,6 +37,10 @@ public class EventManager implements Listener
 
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
+	public static final int days_playerHarming=3;
+	public static final int days_baseOpening=6;
+	public static final int days_chestOpening=9;
+	public static final int days_spongeHarming=12;
 
 	JavaPlugin instance;
 
