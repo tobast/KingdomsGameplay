@@ -71,7 +71,7 @@ public class KingdomsGameplay extends JavaPlugin
 				boolean ok=false;
 				for(int i=0;i<oPlayers.length;i++)
 				{
-					if(oPlayers[i].getName() == args[0])
+					if(oPlayers[i].getName().equals(args[0]))
 					{
 						ok=true;
 						break;
@@ -85,6 +85,9 @@ public class KingdomsGameplay extends JavaPlugin
 				}
 
 				mapInt.changeTeam(args[0], newTeam);
+				sender.sendMessage("Player \""+args[0]+"\" have been switched to team "+args[1]+".");
+				getServer().getPlayer(args[0]).sendMessage("You have been switched to team "+args[1]+" by "+sender.getName()+".");
+				return true;
 			}
 		}
 
