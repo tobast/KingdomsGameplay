@@ -224,12 +224,21 @@ public class EventManager implements Listener
 					e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
 					return;
 				}
+
+				Team spongeTeam=mapInt.spongeOwner(e.getBlock().getLocation());
+				Player[] onlinePlayers=instance.getServer().getOnlinePlayers();
+				for(int i=0;i<onlinePlayers.length;i++)
+				{
+					if(mapInt.getPlayerTeam(onlinePlayers[i].getName()) == spongeTeam)
+						onlinePlayers[i].sendMessage("You can hear the sponge screaming into your head...");
+				}
+
 				e.setCancelled(true);
 				Block b=e.getBlock();
 				if(b!=null)
 					b.setType(Material.AIR);
 
-				if(!mapInt.isSpongeAlive(mapInt.spongeOwner(e.getBlock().getLocation())))
+				if(!mapInt.isSpongeAlive(spongeTeam))
 				{
 					Player[] players=e.getPlayer().getServer().getOnlinePlayers();
 					Team killed=mapInt.spongeOwner(e.getBlock().getLocation());
