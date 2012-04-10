@@ -13,15 +13,22 @@ class RunnableSpongeGrow implements Runnable
 {
 	Location spongeLoc;
 	Location refPos;
-	RunnableSpongeGrow(Location i_spongeLoc, Location i_refPos)
+	ArrayList<Location> fedSponges;
+	RunnableSpongeGrow(Location i_spongeLoc, Location i_refPos, ArrayList<Location> sponges)
 	{
 		spongeLoc=i_spongeLoc;
 		refPos=i_refPos;
+		fedSponges=sponges;
 	}
 
 	public void run()
 	{
-		if(spongeLoc == null || spongeLoc.getBlock() == null || spongeLoc.getBlock().getType() != Material.SPONGE)
+		if(spongeLoc == null)
+			return;
+
+		fedSponges.remove(fedSponges.indexOf(spongeLoc));
+		
+		if(spongeLoc.getBlock() == null || spongeLoc.getBlock().getType() != Material.SPONGE)
 			return; // Not a sponge anymore.
 		
 		ArrayList<BlockFace> availableFaces=new ArrayList<BlockFace>();

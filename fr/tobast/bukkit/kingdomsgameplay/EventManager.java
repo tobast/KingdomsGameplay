@@ -25,6 +25,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
+import java.util.ArrayList;
 
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
@@ -45,6 +46,8 @@ public class EventManager implements Listener
 	public static final int days_spongeHarming=12;
 
 	JavaPlugin instance;
+
+	ArrayList<Location> fedSponges=new ArrayList<Location>();
 
 	public EventManager(MapInterpreter i_mapInt, JavaPlugin instance)
 	{
@@ -336,6 +339,11 @@ public class EventManager implements Listener
 			// SPONGE FEEDING
 			else if(e.getClickedBlock().getType()==Material.SPONGE && e.getPlayer().getItemInHand().getType() == Material.SUGAR)
 			{
+				if(fedSponges.contains(e.getClickedBlock().getLocation()))
+				{
+					e.getPlayer().sendMessage("The sponge burps. It seems that it had been already fed.");
+					return;
+				}
 				Location spongeRef;
 				Team plTeam=mapInt.spongeOwner(e.getClickedBlock().getLocation());
 				if(plTeam == Team.RED)
@@ -353,7 +361,8 @@ public class EventManager implements Listener
 					return;
 				st.setAmount(st.getAmount()-1);
 
-				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef), 3600L); // 3600 ticks = 3*60*20 = 3min
+				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef, fedSponges), 3600L); // 3600 ticks = 3*60*20 = 3min
+				fedSponges.add(e.getClickedBlock().getLocation());
 				e.getPlayer().sendMessage("You successfully fed the sponge.");
 			}
 		}
