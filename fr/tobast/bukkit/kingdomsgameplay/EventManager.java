@@ -32,6 +32,7 @@ import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration; // Static var
 import fr.tobast.bukkit.kingdomsgameplay.RunnableSpongeGrow;
+import fr.tobast.bukkit.kingdomsgameplay.RunnableRestartServer;
 
 public class EventManager implements Listener
 {
@@ -250,10 +251,11 @@ public class EventManager implements Listener
 					else
 						return;
 
-					String message=ChatColor.RED+"The "+mapInt.teamToString(killed)+" sponge has been killed! Congratulations, "+mapInt.teamToString(winners)+" team, you won!"+ChatColor.RESET;
+					String message=ChatColor.RED+"The "+mapInt.teamToString(killed)+" sponge has been killed! Congratulations, "+mapInt.teamToString(winners)+" team, you won! Server will restart in 1min."+ChatColor.RESET;
 					for(int i=0;i<players.length;i++)
 						players[i].sendMessage(message);
-					// TODO server restart?
+					// RESTART - To be working, there must be a background auto-restart script working.
+					e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableRestartServer(e.getPlayer().getServer()), 1200L); // 1200 ticks = 1*60*20 = 1min
 				}
 			}
 

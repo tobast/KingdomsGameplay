@@ -24,4 +24,8 @@ commands:
         usage: /teamset player (B|R)
         permission: KingdomsGameplay.admin.teamset
         permission-message: You don't have the permission to do this!
-
+    breakforce:
+        description: breaks a block
+        usage: /breakforce x y z world
+        permission: KingdomsGameplay.admin.breakforce
+        permission-message: You don't have the permission to do this!

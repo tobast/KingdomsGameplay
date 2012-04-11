@@ -515,12 +515,12 @@ public class MapInterpreter
 			// Chests
 			for(int i=0;i<chests_r.size();i++)
 			{
-				String line="FL;"+String.valueOf(chests_r.get(i).getX())+";"+String.valueOf(chests_r.get(i).getY())+";"+String.valueOf(chests_r.get(i).getZ())+";R";
+				String line="CH;"+String.valueOf(chests_r.get(i).getX())+";"+String.valueOf(chests_r.get(i).getY())+";"+String.valueOf(chests_r.get(i).getZ())+";R";
 				writer.write(line+"\n");
 			}
 			for(int i=0;i<chests_b.size();i++)
 			{
-				String line="FL;"+String.valueOf(chests_b.get(i).getX())+";"+String.valueOf(chests_b.get(i).getY())+";"+String.valueOf(chests_b.get(i).getZ())+";B";
+				String line="CH;"+String.valueOf(chests_b.get(i).getX())+";"+String.valueOf(chests_b.get(i).getY())+";"+String.valueOf(chests_b.get(i).getZ())+";B";
 				writer.write(line+"\n");
 			}
 

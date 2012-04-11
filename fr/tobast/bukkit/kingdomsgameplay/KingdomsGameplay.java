@@ -5,6 +5,9 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.Material;
 
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
@@ -94,6 +97,22 @@ public class KingdomsGameplay extends JavaPlugin
 				mapInt.changeTeam(args[0], newTeam);
 				sender.sendMessage("Player \""+args[0]+"\" have been switched to team "+args[1]+".");
 				getServer().getPlayer(args[0]).sendMessage("You have been switched to team "+args[1]+" by "+sender.getName()+".");
+				return true;
+			}
+		}
+
+		else if(label.equals("breakforce"))
+		{
+			if(args.length == 4)
+			{
+				World wd=getServer().getWorld(args[3]);
+				if(wd==null)
+				{
+					sender.sendMessage("Unknown world.");
+					return false;
+				}
+				Location loc=new Location(wd, Integer.valueOf(args[0]), Integer.valueOf(args[1]), Integer.valueOf(args[2]));
+				loc.getBlock().setType(Material.AIR);
 				return true;
 			}
 		}
