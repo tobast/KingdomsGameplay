@@ -400,7 +400,7 @@ public class EventManager implements Listener
 				}
 
 				ItemStack st=e.getPlayer().getItemInHand();
-				if(st.getAmount()<1)
+				if(st.getAmount()<=1)
 					return;
 				st.setAmount(st.getAmount()-1);
 
