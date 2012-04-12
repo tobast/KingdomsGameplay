@@ -400,9 +400,12 @@ public class EventManager implements Listener
 				}
 
 				ItemStack st=e.getPlayer().getItemInHand();
-				if(st.getAmount()<=1)
+				if(st.getAmount()<1)
 					return;
-				st.setAmount(st.getAmount()-1);
+				else if(st.getAmount() == 1)
+					e.getPlayer().setItemInHand(new ItemStack(Material.AIR));
+				else
+					st.setAmount(st.getAmount()-1);
 
 				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef, fedSponges), 3600L); // 3600 ticks = 3*60*20 = 3min
 				fedSponges.add(e.getClickedBlock().getLocation());
