@@ -40,6 +40,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.Material;
+import org.bukkit.ChatColor;
 
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
@@ -159,7 +160,8 @@ public class KingdomsGameplay extends JavaPlugin
 				}
 				if(args.length >= 1)
 				{
-					String msg=new String();
+					String msg=ChatColor.GOLD+"<"+((Player)sender).getName()+"> ";
+
 					for(int i=0;i<args.length;i++)
 						msg+=args[i]+" ";
 					Player[] players=getServer().getOnlinePlayers();
