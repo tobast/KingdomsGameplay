@@ -34,3 +34,8 @@ commands:
         usage: /ts message
         permission: KingdomsGameplay.teamsay
         permission-message: You don't have the permission to do this!
+    teamsay:
+        description: Teamsay, say something to your team members
+        usage: /ts message
+        permission: KingdomsGameplay.teamsay
+        permission-message: You don't have the permission to do this!
