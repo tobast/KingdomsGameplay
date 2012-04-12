@@ -29,8 +29,8 @@ commands:
         usage: /breakforce x y z world
         permission: KingdomsGameplay.admin.breakforce
         permission-message: You don't have the permission to do this!
-	ts:
+    ts:
         description: Teamsay, say something to your team members
         usage: /ts message
-		permission: KingdomsGameplay.teamsay
+        permission: KingdomsGameplay.teamsay
         permission-message: You don't have the permission to do this!
