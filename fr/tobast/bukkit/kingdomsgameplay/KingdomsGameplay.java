@@ -28,7 +28,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see http://www.gnu.org/licenses/gpl.txt.
-*/
+ */
 
 package fr.tobast.bukkit.kingdomsgameplay;
 
@@ -43,6 +43,7 @@ import org.bukkit.Material;
 
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
+import fr.tobast.bukkit.kingdomsgameplay.Team;
 
 public class KingdomsGameplay extends JavaPlugin
 {
@@ -59,97 +60,121 @@ public class KingdomsGameplay extends JavaPlugin
 
 
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
-	{
-		if(label.equals("zone"))
+		public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
 		{
-			if(sender instanceof Player)
+			if(label.equals("zone"))
 			{
-				Player player=(Player)sender;
-				player.sendMessage("You're in "+mapInt.getZoneLabel(mapInt.getPlayerZone(player.getName(),player.getLocation()))+" zone.");
-				return true;
-			}
-			else
-			{
-				sender.sendMessage("Not a player!");
-				return false;
-			}
-		}
-
-		else if(label.equals("team"))
-		{
-			if(args.length == 1)
-			{
-				String team=mapInt.teamToString(mapInt.getPlayerTeam(args[0]));
-				if(team==null)
+				if(sender instanceof Player)
 				{
-					sender.sendMessage("Player does not exist.");
+					Player player=(Player)sender;
+					player.sendMessage("You're in "+mapInt.getZoneLabel(mapInt.getPlayerZone(player.getName(),player.getLocation()))+" zone.");
+					return true;
+				}
+				else
+				{
+					sender.sendMessage("Not a player!");
 					return false;
 				}
-				sender.sendMessage(args[0]+" is in the "+team+" team.");
-				return true;
 			}
-		}
 
-		else if(label.equals("daynum"))
-		{
-			long day=mapInt.getSponges()[0].getWorld().getFullTime() / 24000;
-			sender.sendMessage("Current day is day "+String.valueOf(day)+".");
-			return true;
-		}
-		
-		else if(label.equals("teamset"))
-		{
-			if(args.length == 2)
+			else if(label.equals("team"))
 			{
-				Team newTeam=mapInt.teamFromId(args[1]);
-				if(newTeam==Team.DAFUQ)
+				if(args.length == 1)
 				{
-					sender.sendMessage("Invalid team. The identifier must be uppercase!");
-					return false;
-				}
-
-				OfflinePlayer[] oPlayers=getServer().getOfflinePlayers();
-				boolean ok=false;
-				for(int i=0;i<oPlayers.length;i++)
-				{
-					if(oPlayers[i].getName().equals(args[0]))
+					String team=mapInt.teamToString(mapInt.getPlayerTeam(args[0]));
+					if(team==null)
 					{
-						ok=true;
-						break;
+						sender.sendMessage("Player does not exist.");
+						return false;
 					}
-						
+					sender.sendMessage(args[0]+" is in the "+team+" team.");
+					return true;
 				}
-				if(!ok)
-				{
-					sender.sendMessage("Player \""+args[0]+"\" does not exists.");
-					return false;
-				}
-
-				mapInt.changeTeam(args[0], newTeam);
-				sender.sendMessage("Player \""+args[0]+"\" have been switched to team "+args[1]+".");
-				getServer().getPlayer(args[0]).sendMessage("You have been switched to team "+args[1]+" by "+sender.getName()+".");
-				return true;
 			}
-		}
 
-		else if(label.equals("breakforce"))
-		{
-			if(args.length == 4)
+			else if(label.equals("daynum"))
 			{
-				World wd=getServer().getWorld(args[3]);
-				if(wd==null)
-				{
-					sender.sendMessage("Unknown world.");
-					return false;
-				}
-				Location loc=new Location(wd, Integer.valueOf(args[0]), Integer.valueOf(args[1]), Integer.valueOf(args[2]));
-				loc.getBlock().setType(Material.AIR);
+				long day=mapInt.getSponges()[0].getWorld().getFullTime() / 24000;
+				sender.sendMessage("Current day is day "+String.valueOf(day)+".");
 				return true;
 			}
-		}
 
-		return false;
-	}
+			else if(label.equals("teamset"))
+			{
+				if(args.length == 2)
+				{
+					Team newTeam=mapInt.teamFromId(args[1]);
+					if(newTeam==Team.DAFUQ)
+					{
+						sender.sendMessage("Invalid team. The identifier must be uppercase!");
+						return false;
+					}
+
+					OfflinePlayer[] oPlayers=getServer().getOfflinePlayers();
+					boolean ok=false;
+					for(int i=0;i<oPlayers.length;i++)
+					{
+						if(oPlayers[i].getName().equals(args[0]))
+						{
+							ok=true;
+							break;
+						}
+
+					}
+					if(!ok)
+					{
+						sender.sendMessage("Player \""+args[0]+"\" does not exists.");
+						return false;
+					}
+
+					mapInt.changeTeam(args[0], newTeam);
+					sender.sendMessage("Player \""+args[0]+"\" have been switched to team "+args[1]+".");
+					getServer().getPlayer(args[0]).sendMessage("You have been switched to team "+args[1]+" by "+sender.getName()+".");
+					return true;
+				}
+			}
+
+			else if(label.equals("breakforce"))
+			{
+				if(args.length == 4)
+				{
+					World wd=getServer().getWorld(args[3]);
+					if(wd==null)
+					{
+						sender.sendMessage("Unknown world.");
+						return false;
+					}
+					Location loc=new Location(wd, Integer.valueOf(args[0]), Integer.valueOf(args[1]), Integer.valueOf(args[2]));
+					loc.getBlock().setType(Material.AIR);
+					return true;
+				}
+			}
+
+			else if(label.equals("ts") || label.equals("teamsay"))
+			{
+				if(!(sender instanceof Player))
+				{
+					sender.sendMessage("You must be a player.");
+					return false;
+				}
+				if(args.length >= 1)
+				{
+					String msg=new String();
+					for(int i=0;i<args.length;i++)
+						msg+=args[i]+" ";
+					Player[] players=getServer().getOnlinePlayers();
+					Team team=mapInt.getPlayerTeam(((Player)sender).getName());
+					for(int i=0;i<players.length;i++)
+					{
+						if(mapInt.getPlayerTeam(players[i].getName()) == team)
+						{	
+							players[i].sendMessage(msg);
+						}
+					}
+				}
+			}
+
+			return false;
+		}
 }
 
