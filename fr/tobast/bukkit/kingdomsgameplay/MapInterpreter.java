@@ -449,17 +449,29 @@ public class MapInterpreter
 	public boolean baseExists(Location loc, Team team)
 	{
 		if(team==Team.RED)
-			return bases_r.contains(loc);
+		{
+			for(Location base : bases_r)
+			{
+				if(base.getX() == loc.getX() && base.getZ() == loc.getZ())// && loc.getY() >= base.getY() && loc.getY() <= base.getY()+6)
+					return true;
+			}
+		}
 		else if(team==Team.BLUE)
-			return bases_b.contains(loc);
+		{
+			for(Location base : bases_b)
+			{
+				if(base.getX() == loc.getX() && base.getZ() == loc.getZ())// && loc.getY() >= base.getY() && loc.getY() <= base.getY()+6)
+					return true;
+			}
+		}
 		else
 		{
-			if(bases_r.contains(loc))
+			if(baseExists(loc, Team.RED))
 				return true;
-			else if(bases_b.contains(loc))
+			if(baseExists(loc, Team.BLUE))
 				return true;
-			return false;
 		}
+		return false;
 	}
 
 	public Team isBaseLocation(Location loc)

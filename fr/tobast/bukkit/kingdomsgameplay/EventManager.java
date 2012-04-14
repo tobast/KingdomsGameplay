@@ -46,6 +46,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -330,16 +331,41 @@ public class EventManager implements Listener
 			// FLAG PLANTING
 			if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
 			{
+				// Existance check
+				for(int i=0;i<4;i++)
+				{
+					if(mapInt.baseExists(e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation()))
+					{
+						// if the flag already exists
+						Location currPtr=e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation().clone();
+
+						byte wool_color;
+						if(mapInt.isBaseLocation(currPtr) == Team.RED)
+							wool_color=14;
+						else
+							wool_color=11;
+
+						currPtr.add(1,4,0);
+						for(int j=0;j<3;j++)
+						{
+							currPtr.getBlock().setType(Material.WOOL);
+							currPtr.getBlock().setData(wool_color);
+							currPtr.add(1,0,0);	
+						}
+						currPtr.add(-1,-1,0);
+						for(int j=0;j<3;j++)
+						{
+							currPtr.getBlock().setType(Material.WOOL);
+							currPtr.getBlock().setData(wool_color);
+							currPtr.add(-1,0,0);	
+						}
+						return;
+					}
+				}
+
 				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
 				if(locationArray[0]!=null) // A flag was activated
 				{
-					// Existance check
-					if(mapInt.baseExists(locationArray[0]))
-					{
-						e.getPlayer().sendMessage("This flag is already planted!");
-						return;
-					}
-
 					// Zone check (each corner)
 					Location loc=locationArray[0].clone();
 					int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
