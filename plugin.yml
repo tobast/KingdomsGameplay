@@ -44,3 +44,8 @@ commands:
         usage: /kg-vote (restart | yes | no)
         permission: KingdomsGameplay.vote
         permission-message: You don't have the permission to do this!
+    kg-cancelvote:
+        description: Cancels the current vote.
+        usage: /kg-cancelvote
+        permission: KingdomsGameplay.admin.cancelvote
+        permission-message: You don't have the permission to do this!

@@ -237,6 +237,12 @@ public class KingdomsGameplay extends JavaPlugin
 				return false;
 			}
 
+			else if(label.equals("kg-cancelvote"))
+			{
+				getServer().broadcastMessage(sender.getName()+" cancelled the current vote.");
+				currentVote=null;
+			}
+
 			return false;
 		}
 }
