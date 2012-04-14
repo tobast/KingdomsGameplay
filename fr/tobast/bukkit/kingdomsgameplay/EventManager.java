@@ -28,7 +28,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see http://www.gnu.org/licenses/gpl.txt.
-*/
+ */
 
 package fr.tobast.bukkit.kingdomsgameplay;
 
@@ -43,6 +43,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.block.Block;
@@ -321,6 +322,16 @@ public class EventManager implements Listener
 			}			
 		}
 
+	@EventHandler(priority=EventPriority.HIGHEST)
+		public void onBlockBurnEvent(BlockBurnEvent e)
+		{
+			if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+			{
+				e.setCancelled(true);
+				return;
+			}
+		}
+
 	@EventHandler(priority=EventPriority.NORMAL)
 		public void onPlayerInteractEvent(PlayerInteractEvent e)
 		{
@@ -330,7 +341,7 @@ public class EventManager implements Listener
 			if(e.getClickedBlock().getType() == Material.CHEST)
 			{
 				if(e.getClickedBlock().getLocation().getWorld().getFullTime()/24000 < days_chestOpening &&
-					mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
+						mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
 				{
 					e.setCancelled(true);
 					e.getPlayer().sendMessage("You cannot steal from ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
@@ -453,43 +464,43 @@ public class EventManager implements Listener
 		}
 
 	@EventHandler(priority=EventPriority.HIGH)
-	public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
-	{
-		long day=e.getEntity().getLocation().getWorld().getFullTime()/24000; // A bit hacky, huh?
-		if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
+		public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
 		{
-			if(e.getDamager().getType()==EntityType.PLAYER)
+			long day=e.getEntity().getLocation().getWorld().getFullTime()/24000; // A bit hacky, huh?
+			if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
 			{
-				e.setCancelled(true);
-				((Player)e.getDamager()).sendMessage("You cannot hurt a player before day "+String.valueOf(days_playerHarming)+"!");
-			}
-			else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
-			{
-				e.setCancelled(true);
+				if(e.getDamager().getType()==EntityType.PLAYER)
+				{
+					e.setCancelled(true);
+					((Player)e.getDamager()).sendMessage("You cannot hurt a player before day "+String.valueOf(days_playerHarming)+"!");
+				}
+				else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
+				{
+					e.setCancelled(true);
+				}
 			}
 		}
-	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
-	public void onEntityExplodeEvent(EntityExplodeEvent e)
-	{
-		List<Block> exploded=new ArrayList<Block>();
-		exploded.addAll(e.blockList());
-		long day=e.getLocation().getWorld().getFullTime() / 24000;
-
-		for(int i=0;i<exploded.size();i++)
+		public void onEntityExplodeEvent(EntityExplodeEvent e)
 		{
-			Material type=exploded.get(i).getType();
-			ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
+			List<Block> exploded=new ArrayList<Block>();
+			exploded.addAll(e.blockList());
+			long day=e.getLocation().getWorld().getFullTime() / 24000;
 
-			if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) || 
-				(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY)) ||
-				(type == Material.LOG && mapInt.isFlagpole(exploded.get(i).getLocation())))
+			for(int i=0;i<exploded.size();i++)
 			{
-				e.blockList().remove(exploded.get(i));
+				Material type=exploded.get(i).getType();
+				ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
+
+				if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) || 
+						(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY)) ||
+						(type == Material.LOG && mapInt.isFlagpole(exploded.get(i).getLocation())))
+				{
+					e.blockList().remove(exploded.get(i));
+				}
 			}
 		}
-	}
 
 	protected Location[] isFlag(Location blockPtr)
 	{
