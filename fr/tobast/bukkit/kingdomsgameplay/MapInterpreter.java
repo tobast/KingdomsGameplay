@@ -610,5 +610,34 @@ public class MapInterpreter
 
 		return false;
 	}
+
+	public boolean isFlagWool(Location loc)
+	{
+		// Red checking
+		for(Location base_i : bases_r)
+		{
+			Location base=base_i.clone();
+			base.add(0,5,0);
+			if(loc.getX() >= base.getX()-3 && loc.getX() <= base.getX()+3 && loc.getZ() >= base.getZ()-3 && loc.getZ() <= base.getZ()+3 &&
+				(loc.getY() == base.getY()-1 || loc.getY() == base.getY()))
+			{
+				return true;
+			}
+		}
+
+		// Blue checking
+		for(Location base_i : bases_b)
+		{
+			Location base=base_i.clone();
+			base.add(0,5,0);
+			if(loc.getX() >= base.getX()-3 && loc.getX() <= base.getX()+3 && loc.getZ() >= base.getZ()-3 && loc.getZ() <= base.getZ()+3 &&
+				loc.getY() >= base.getY()-1 && loc.getY() <= base.getY())
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 

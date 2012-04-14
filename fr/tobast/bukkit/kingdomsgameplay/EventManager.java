@@ -253,6 +253,16 @@ public class EventManager implements Listener
 				mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
 			}
 
+			if(e.getBlock().getType() == Material.WOOL)
+			{
+				if(mapInt.isFlagWool(e.getBlock().getLocation()))
+				{
+					// No drops.
+					e.setCancelled(true);
+					e.getBlock().setType(Material.AIR);
+				}
+			}
+
 			if(e.getBlock().getType() == Material.SPONGE)
 			{
 				if(day < days_spongeHarming)
