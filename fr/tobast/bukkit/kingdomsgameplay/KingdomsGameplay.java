@@ -208,7 +208,12 @@ public class KingdomsGameplay extends JavaPlugin
 						if(currentVote==null)
 						{
 							sender.sendMessage("There's no vote started.");
-							return false;
+							return true;
+						}
+						if(voteNames.contains(sender.getName()))
+						{
+							sender.sendMessage("You already voted!");
+							return true;
 						}
 
 						currentVote[0]++;
@@ -222,7 +227,12 @@ public class KingdomsGameplay extends JavaPlugin
 						if(currentVote==null)
 						{
 							sender.sendMessage("There's no vote started.");
-							return false;
+							return true;
+						}
+						if(voteNames.contains(sender.getName()))
+						{
+							sender.sendMessage("You already voted!");
+							return true;
 						}
 
 						currentVote[1]++;
