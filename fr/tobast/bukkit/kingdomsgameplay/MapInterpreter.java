@@ -575,5 +575,28 @@ public class MapInterpreter
 			e.printStackTrace();
 		}
 	}
+
+	public boolean isFlagpole(Location loc)
+	{
+		// Red checking
+		for(Location base : bases_r)
+		{
+			if(base.getX() == loc.getX() && base.getZ() == loc.getZ() && loc.getY() >= base.getZ() && loc.getY() <= base.getZ()+6)
+			{
+				return true;
+			}
+		}
+
+		// Blue checking
+		for(Location base : bases_b)
+		{
+			if(base.getX() == loc.getX() && base.getZ() == loc.getZ() && loc.getY() >= base.getY() && loc.getY() <= base.getY()+6)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 

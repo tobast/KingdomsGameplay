@@ -446,8 +446,9 @@ public class EventManager implements Listener
 			Material type=exploded.get(i).getType();
 			ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
 
-			if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) ||
-				(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY))) // TODO add flagpole
+			if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) || 
+				(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY)) ||
+				(type == Material.LOG && mapInt.isFlagpole(exploded.get(i).getLocation())))
 			{
 				e.blockList().remove(exploded.get(i));
 			}
