@@ -345,7 +345,11 @@ public class MapInterpreter
 
 	public ZoneType getPlayerZone(String playerName, Location plLoc)
 	{
-		Team plTeam=getPlayerTeam(playerName);
+		Team plTeam;
+		if(playerName==null)
+			plTeam=Team.RED;
+		else
+			plTeam=getPlayerTeam(playerName);
 		ZoneType toRet=ZoneType.NEUTRAL;
 
 		if(plTeam == Team.BLUE) // First process the ennemy bases, for no man's lands

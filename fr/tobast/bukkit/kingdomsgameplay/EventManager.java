@@ -36,6 +36,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -58,6 +59,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
 import java.util.ArrayList;
+import java.util.List;
 
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
@@ -428,6 +430,26 @@ public class EventManager implements Listener
 			else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
 			{
 				e.setCancelled(true);
+			}
+		}
+	}
+
+	@EventHandler(priority=EventPriority.HIGHEST)
+	public void onEntityExplodeEvent(EntityExplodeEvent e)
+	{
+		List<Block> exploded=new ArrayList<Block>();
+		exploded.addAll(e.blockList());
+		long day=e.getLocation().getWorld().getFullTime() / 24000;
+
+		for(int i=0;i<exploded.size();i++)
+		{
+			Material type=exploded.get(i).getType();
+			ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
+
+			if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) ||
+				(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY))) // TODO add flagpole
+			{
+				e.blockList().remove(exploded.get(i));
 			}
 		}
 	}
