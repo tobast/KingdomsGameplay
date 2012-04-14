@@ -42,6 +42,8 @@ import org.bukkit.World;
 import org.bukkit.Material;
 import org.bukkit.ChatColor;
 
+import java.util.ArrayList;
+
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.Team;
@@ -49,6 +51,11 @@ import fr.tobast.bukkit.kingdomsgameplay.Team;
 public class KingdomsGameplay extends JavaPlugin
 {
 	protected MapInterpreter mapInt=null;
+	protected int[] currentVote=null;
+	public final int[] getCurrentVote() { return currentVote; }
+	public void resetVote() { currentVote=null; }
+	protected ArrayList<String> voteNames=null;
+
 	public void onEnable()
 	{
 		mapInt=new MapInterpreter(this);
@@ -174,6 +181,60 @@ public class KingdomsGameplay extends JavaPlugin
 						}
 					}
 				}
+			}
+			
+			else if(label.equals("kg-vote"))
+			{
+				if(args.length == 1)
+				{
+					if(args[0].equals("restart")) // Begin a restart vote
+					{
+						if(currentVote != null) // A vote has been started
+						{
+							sender.sendMessage("A vote is already started.");
+							return false;
+						}
+
+						currentVote=new int[2];
+						voteNames=new ArrayList<String>();
+						getServer().broadcastMessage("Restart vote has started. You have 1min to vote, using /kg-vote yes and /kg-vote no command.");
+						getServer().getScheduler().scheduleSyncDelayedTask(this, new RunnableRestartVote(this), 1200L); // 1200 ticks = 1min
+
+						return true;
+					}
+
+					else if(args[0].equals("yes"))
+					{
+						if(currentVote==null)
+						{
+							sender.sendMessage("There's no vote started.");
+							return false;
+						}
+
+						currentVote[0]++;
+						voteNames.add(sender.getName());
+						sender.sendMessage("You voted yes.");
+						return true;
+					}
+
+					else if(args[0].equals("no"))
+					{
+						if(currentVote==null)
+						{
+							sender.sendMessage("There's no vote started.");
+							return false;
+						}
+
+						currentVote[1]++;
+						voteNames.add(sender.getName());
+						sender.sendMessage("You voted yes.");
+						return true;
+					}
+					sender.sendMessage("Wrong parameter.");
+					return false;
+				}
+				sender.sendMessage("No enough parameters given.");
+				return false;
 			}
 
 			return false;

@@ -39,3 +39,8 @@ commands:
         usage: /ts message
         permission: KingdomsGameplay.teamsay
         permission-message: You don't have the permission to do this!
+    kg-vote:
+        description: Used to vote anything. Use yes or no to vote, the others words to start a vote.
+        usage: /kg-vote (restart | yes | no)
+        permission: KingdomsGameplay.vote
+        permission-message: You don't have the permission to do this!
