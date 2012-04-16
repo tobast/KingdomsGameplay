@@ -59,7 +59,7 @@ import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.logging.Logger;
+// import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +73,7 @@ import fr.tobast.bukkit.kingdomsgameplay.RunnableRestartServer;
 public class EventManager implements Listener
 {
 	MapInterpreter mapInt;
-	Logger log=Logger.getLogger("Minecraft"); // TODO REMOVE
+//	Logger log=Logger.getLogger("Minecraft");
 
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;

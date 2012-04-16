@@ -1,6 +1,6 @@
 name: KingdomsGameplay
 main: fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay
-version: 0.9
+version: 1.0
 author: Tobast
 
 commands:

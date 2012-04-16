@@ -36,7 +36,7 @@ import java.lang.Double;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.ArrayList;
-import java.util.logging.Logger;
+// import java.util.logging.Logger;
 import java.util.Enumeration;
 import java.util.Collection;
 import java.util.Iterator;
@@ -71,7 +71,7 @@ public class MapInterpreter
 
 	InitialGeneration generator=null;
 
-	Logger log=Logger.getLogger("Minecraft"); // TODO DELETE
+//	Logger log=Logger.getLogger("Minecraft");
 
 	enum ZoneType
 	{
