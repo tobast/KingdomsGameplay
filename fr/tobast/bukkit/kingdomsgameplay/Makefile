@@ -1,6 +1,6 @@
 CMP= javac
 LIBS= -cp /usr/share/java/bukkitapi-latest.jar
-FLAGS=-Xlint:unchecked
+FLAGS=-Xlint:unchecked -source 6 -target 6
 
 all: targets
 	$(CMP) $(LIBS) $(FLAGS) @sourcefiles
