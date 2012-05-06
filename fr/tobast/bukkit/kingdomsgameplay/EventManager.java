@@ -59,9 +59,10 @@ import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-// import java.util.logging.Logger;
+import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter.ZoneType;
@@ -73,10 +74,12 @@ import fr.tobast.bukkit.kingdomsgameplay.RunnableRestartServer;
 public class EventManager implements Listener
 {
 	MapInterpreter mapInt;
-//	Logger log=Logger.getLogger("Minecraft");
+	Logger log=Logger.getLogger("Minecraft");
 
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
+
+	protected long lastErrorTimestamp=0;
 
 	public static final int days_playerHarming=3;
 	public static final int days_chestOpening=6;
@@ -208,7 +211,11 @@ public class EventManager implements Listener
 					if(day < days_baseBreaking)
 					{
 						e.setCancelled(true);
-						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+						{
+							e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+							lastErrorTimestamp=(new Date()).getTime();
+						}
 						return;
 					}
 					player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
@@ -218,7 +225,11 @@ public class EventManager implements Listener
 					if(day < days_baseBreaking)
 					{
 						e.setCancelled(true);
-						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+						{
+							e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+							lastErrorTimestamp=(new Date()).getTime();
+						}
 						return;
 					}
 
@@ -227,7 +238,11 @@ public class EventManager implements Listener
 							blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
 					{
 						e.setCancelled(true);
-						player.sendMessage("This block is not damageable in the ennemy's base (at least, by an human being).");
+						if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+						{
+							player.sendMessage("This block is not damageable in the ennemy's base (at least, by an human being).");
+							lastErrorTimestamp=(new Date()).getTime();
+						}
 					}
 					else
 						player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
@@ -248,7 +263,11 @@ public class EventManager implements Listener
 				if(day < days_chestOpening && mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getBlock().getLocation()))
 				{
 					e.setCancelled(true);
-					e.getPlayer().sendMessage("You cannot break ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
+					if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+					{
+						e.getPlayer().sendMessage("You cannot break ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
+						lastErrorTimestamp=(new Date()).getTime();
+					}
 					return;
 				}
 				mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
@@ -269,7 +288,11 @@ public class EventManager implements Listener
 				if(day < days_spongeHarming)
 				{
 					e.setCancelled(true);
-					e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
+					if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+					{
+						e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
+						lastErrorTimestamp=(new Date()).getTime();
+					}
 					return;
 				}
 
@@ -308,7 +331,11 @@ public class EventManager implements Listener
 
 			if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
 			{
-				e.getPlayer().sendMessage("You cannot break a flagpole.");
+				if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+				{
+					e.getPlayer().sendMessage("You cannot break a flagpole.");
+					lastErrorTimestamp=(new Date()).getTime();
+				}
 				e.setCancelled(true);
 				return;
 			}
