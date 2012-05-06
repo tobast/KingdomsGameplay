@@ -64,10 +64,15 @@ public class MapInterpreter
 	private Hashtable<String, Team> playerTeams=new Hashtable<String,Team>(); // Player -> Team
 	public final Hashtable<String, Team> getPlayerTeams() { return playerTeams; }
 
+	private String[] kings=new String[2];
+	public final String[] getKings() { return kings; }
+	public final String getKing(Team team) { if(team==Team.RED) return kings[0]; else if(team==Team.BLUE) return kings[1]; else return null; }
+
 	private Location[] sponges = new Location[2];
 	public final Location[] getSponges() { return sponges; }
 
 	private JavaPlugin instance;
+	public final JavaPlugin getInstance() { return instance; }
 
 	InitialGeneration generator=null;
 
@@ -148,6 +153,15 @@ public class MapInterpreter
 						{
 							String[] split=line.split(";");
 							playerTeams.put(split[1], teamFromId(split[2]));
+						}
+
+						else if(line.startsWith("KG;")) // King. Line type : « KG;king_name;(R|B) »
+						{
+							String[] split=line.split(";");
+							if(split[2].startsWith("R"))
+								kings[0]=split[1];
+							else if(split[2].startsWith("B"))
+								kings[1]=split[1];
 						}
 
 						else if(line.startsWith("CH;")) // Chest. Line type : « CH;x;y;z;(R|B) »
@@ -582,6 +596,12 @@ public class MapInterpreter
 				String line="PL;"+keys.nextElement()+";"+teamToId(values.next());
 				writer.write(line+"\n");
 			}
+
+			// Kings
+			if(kings[0] != null)
+				writer.write("KG;"+kings[0]+";R\n");
+			if(kings[1] != null)
+				writer.write("KG;"+kings[1]+";B\n");
 		}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -638,6 +658,39 @@ public class MapInterpreter
 		}
 
 		return false;
+	}
+	
+	public int getTeamSize(Team team)
+	{
+		Team[] teamAry=playerTeams.values().toArray(new Team[0]);
+
+		int count=0;
+		for(int i=0; i<teamAry.length; i++)
+			if(teamAry[i]==team)
+				count++;
+
+		return count;
+	}
+
+	public void setKing(Team team, String name)
+	{
+		if(team==Team.RED)
+			kings[0]=name;
+		else if(team==Team.BLUE)
+			kings[1]=name;
+
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath))); // Open in truncate mode
+			try {
+				rewriteConfig(writer);
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
 

@@ -180,6 +180,7 @@ public class KingdomsGameplay extends JavaPlugin
 							players[i].sendMessage(msg);
 						}
 					}
+					return true;
 				}
 			}
 			

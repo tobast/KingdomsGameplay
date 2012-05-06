@@ -37,13 +37,16 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.EntityType;
 import org.bukkit.block.Block;
@@ -97,7 +100,7 @@ public class EventManager implements Listener
 		mapInt=i_mapInt;
 		this.instance=instance;
 
-		kingHandler=new KingHandler(map);
+		kingHandler=new KingHandler(mapInt);
 	}
 
 	@EventHandler(priority=EventPriority.HIGHEST) // Must have the final word on the spawn point
@@ -106,6 +109,8 @@ public class EventManager implements Listener
 			Player player=e.getPlayer();
 			String playerName=player.getName();
 			Team playerTeam=mapInt.getPlayerTeam(playerName);
+
+			boolean newPlayer=false;
 
 			if(playerTeam==null) // The player isn't assigned to any team
 			{
@@ -117,6 +122,8 @@ public class EventManager implements Listener
 					spawn.getChunk().load();
 					player.teleport(spawn);
 				}
+
+				newPlayer=true;
 			}
 
 			if(playerTeam==Team.DAFUQ)
@@ -125,26 +132,70 @@ public class EventManager implements Listener
 				player.sendMessage("Welcome, " + player.getName() + ". You are in the " + mapInt.teamToString(playerTeam) + " team.");
 
 
-			// Inserted on Apr 27th 2012
 			String kingName=kingHandler.getTeamKing(playerTeam);
 
 			if(kingName==null)
 			{
-				if(mapInt.getTeamPlayers(playerTeam).size() == 0)
+				if(mapInt.getTeamSize(playerTeam) == 1 && newPlayer)
 				{
 					// First player to log into that playerTeam
-					kingHandler.setKing(e.getPlayer(), playerTeam);
-					e.getPlayer().sendMessage("You are the king of your playerTeam. Hail to the king!");
+//					kingHandler.setKing(e.getPlayer(), playerTeam);
+//					e.getPlayer().sendMessage("You are the king of your team. Hail to the king!");
+					e.getPlayer().getInventory().addItem(new ItemStack(Material.GOLD_HELMET));
+					e.getPlayer().sendMessage("The kingdom is at the moment kingless, but you received a crown from the Gods.");
 				}
-
-				e.getPlayer().sendMessage("The kingdom is at the moment kingless!");
+				else
+					e.getPlayer().sendMessage("The kingdom is at the moment kingless!");
 			}
 			else
 			{
-				e.getPlayer().sendMessage("You swore allegence to "+kingName+", your king.");
+				if(kingName.equals(e.getPlayer().getName()))
+				{
+					e.getPlayer().sendMessage("You are the king of this team. Hail to the king!");
+					kingHandler.setKingDisplays(playerTeam);
+				}
+				else
+					e.getPlayer().sendMessage("You swore allegence to "+kingName+", your king.");
 			}
+		}
 
-			// End insertion.TODO remove that comment.
+	@EventHandler(priority=EventPriority.MONITOR)
+		public void onPlayerQuitEvent(PlayerQuitEvent e)
+		{
+			String plName=e.getPlayer().getName();
+			Team team=kingHandler.isKing(plName);
+			if(team != null)
+				kingHandler.dismissTeamKing(team);
+		}
+
+	@EventHandler(priority=EventPriority.MONITOR)
+		public void onEntityDeathEvent(EntityDeathEvent e)
+		{
+			if(e.getEntityType() == EntityType.PLAYER)
+			{
+				Player player = (Player)(e.getEntity());
+				String plName = player.getName();
+				Team team=kingHandler.isKing(plName);
+				if(team != null)
+					kingHandler.dismissTeamKing(team);
+			}
+		}
+	
+	@EventHandler(priority=EventPriority.NORMAL)
+		public void onInventoryCloseEvent(InventoryCloseEvent e)
+		{
+			if(e.getPlayer() instanceof Player)
+			{
+				Player player=(Player)(e.getPlayer());
+				if(player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() == Material.GOLD_HELMET) // Player is crowned
+				{
+					Team plTeam=mapInt.getPlayerTeam(player.getName());
+					if(kingHandler.getTeamKing(plTeam) == null)
+					{
+						kingHandler.setKing(player, plTeam);
+					}
+				}
+			}
 		}
 
 	@EventHandler(priority=EventPriority.NORMAL)
