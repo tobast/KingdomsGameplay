@@ -187,14 +187,14 @@ public class EventManager implements Listener
 			if(e.getPlayer() instanceof Player)
 			{
 				Player player=(Player)(e.getPlayer());
+				Team plTeam=mapInt.getPlayerTeam(player.getName());
 				if(player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() == Material.GOLD_HELMET) // Player is crowned
-				{
-					Team plTeam=mapInt.getPlayerTeam(player.getName());
 					if(kingHandler.getTeamKing(plTeam) == null)
-					{
 						kingHandler.setKing(player, plTeam);
-					}
-				}
+
+				else if(player.getName().equals(kingHandler.getTeamKing(plTeam)))
+					if(player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType() != Material.GOLD_HELMET)
+						kingHandler.dismissTeamKing(plTeam);
 			}
 		}
 
