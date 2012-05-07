@@ -65,10 +65,31 @@ public class KingdomsGameplay extends JavaPlugin
 
 	public void loadConfig()
 	{
+		// ===== Set default values =====
+
+		// Days
 		getConfig().addDefault("days.harmPlayer", 2);
 		getConfig().addDefault("days.chest", 3);
 		getConfig().addDefault("days.breakBase", 5);
 		getConfig().addDefault("days.harmSponge", 7);
+
+		// King costs
+		getConfig().addDefault("costs.wool", 2);
+		getConfig().addDefault("costs.sheep", 10);
+		getConfig().addDefault("costs.sword", 6);
+		getConfig().addDefault("costs.chestplate", 18);
+		getConfig().addDefault("costs.iron", 2);
+		getConfig().addDefault("costs.log", 2);
+		getConfig().addDefault("costs.diamond", 40);
+		getConfig().addDefault("costs.enchanting", 90);
+		getConfig().addDefault("costs.brewing", 90);
+		getConfig().addDefault("costs.wart", 2);
+		getConfig().addDefault("costs.glowstone", 2);
+		getConfig().addDefault("costs.gunpowder", 5);
+		getConfig().addDefault("costs.cobble", 5); // Full stack
+
+		// ===== End default =====
+
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 	}
