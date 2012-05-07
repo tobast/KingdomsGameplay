@@ -435,6 +435,7 @@ public class EventManager implements Listener
 			if(e.getClickedBlock().getType() == Material.CHEST)
 			{
 				if(e.getClickedBlock().getLocation().getWorld().getFullTime()/24000 < days_chestOpening &&
+						mapInt.chestOwner(e.getClickedBlock().getLocation()) != null &&
 						mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
 				{
 					e.setCancelled(true);
