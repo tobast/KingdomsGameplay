@@ -58,8 +58,19 @@ public class KingdomsGameplay extends JavaPlugin
 
 	public void onEnable()
 	{
+		loadConfig();
 		mapInt=new MapInterpreter(this);
 		getServer().getPluginManager().registerEvents(new EventManager(mapInt, this), this);
+	}
+
+	public void loadConfig()
+	{
+		getConfig().addDefault("days.harmPlayer", 2);
+		getConfig().addDefault("days.chest", 3);
+		getConfig().addDefault("days.breakBase", 5);
+		getConfig().addDefault("days.harmSponge", 7);
+		getConfig().options().copyDefaults(true);
+		saveConfig();
 	}
 
 	public void onDisable()

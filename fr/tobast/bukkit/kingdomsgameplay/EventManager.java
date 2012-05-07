@@ -86,10 +86,10 @@ public class EventManager implements Listener
 
 	protected long lastErrorTimestamp=0;
 
-	public static final int days_playerHarming=3;
-	public static final int days_chestOpening=6;
-	public static final int days_baseBreaking=9;
-	public static final int days_spongeHarming=12;
+	private int days_playerHarming;
+	private int days_chestOpening;
+	private int days_baseBreaking;
+	private int days_spongeHarming;
 
 	JavaPlugin instance;
 
@@ -99,6 +99,11 @@ public class EventManager implements Listener
 	{
 		mapInt=i_mapInt;
 		this.instance=instance;
+
+		days_playerHarming = instance.getConfig().getInt("days.harmPlayer");
+		days_chestOpening = instance.getConfig().getInt("days.chest");
+		days_baseBreaking = instance.getConfig().getInt("days.baseBreak");
+		days_spongeHarming = instance.getConfig().getInt("days.harmSponge");
 
 		kingHandler=new KingHandler(mapInt);
 	}
