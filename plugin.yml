@@ -49,3 +49,8 @@ commands:
         usage: /kg-cancelvote
         permission: KingdomsGameplay.admin.cancelvote
         permission-message: You don't have the permission to do this!
+    king-buy:
+        description: If you are the king, you can buy items using gold nuggets this way (check the list on the wiki)
+        usage: /king-buy <item> <quantity>
+        permission: KingdomsGameplay.king-buy
+        permission-message: You don't have the permission to do this!

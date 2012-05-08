@@ -77,8 +77,10 @@ import fr.tobast.bukkit.kingdomsgameplay.KingHandler;
 
 public class EventManager implements Listener
 {
-	MapInterpreter mapInt;
-	KingHandler kingHandler;
+	protected MapInterpreter mapInt;
+	protected KingHandler kingHandler;
+	public final KingHandler getKingHandler() { return kingHandler; }
+
 	//	Logger log=Logger.getLogger("Minecraft");
 
 	protected static final int neutralZoneSlowness=3;

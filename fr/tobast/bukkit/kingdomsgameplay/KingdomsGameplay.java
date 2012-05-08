@@ -35,6 +35,8 @@ package fr.tobast.bukkit.kingdomsgameplay;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Location;
@@ -43,6 +45,7 @@ import org.bukkit.Material;
 import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
@@ -51,16 +54,20 @@ import fr.tobast.bukkit.kingdomsgameplay.Team;
 public class KingdomsGameplay extends JavaPlugin
 {
 	protected MapInterpreter mapInt=null;
+	protected EventManager eventHandler=null;
 	protected int[] currentVote=null;
 	public final int[] getCurrentVote() { return currentVote; }
 	public void resetVote() { currentVote=null; }
 	protected ArrayList<String> voteNames=null;
 
+	Logger log=Logger.getLogger("minecraft");
+
 	public void onEnable()
 	{
 		loadConfig();
 		mapInt=new MapInterpreter(this);
-		getServer().getPluginManager().registerEvents(new EventManager(mapInt, this), this);
+		eventHandler=new EventManager(mapInt, this);
+		getServer().getPluginManager().registerEvents(eventHandler, this);
 	}
 
 	public void loadConfig()
@@ -74,8 +81,8 @@ public class KingdomsGameplay extends JavaPlugin
 		getConfig().addDefault("days.harmSponge", 7);
 
 		// King costs
-		getConfig().addDefault("costs.wool", 2);
-		getConfig().addDefault("costs.sheep", 10);
+		getConfig().addDefault("costs.wool", 3);
+		getConfig().addDefault("costs.sheep", 12);
 		getConfig().addDefault("costs.sword", 6);
 		getConfig().addDefault("costs.chestplate", 18);
 		getConfig().addDefault("costs.iron", 2);
@@ -215,7 +222,7 @@ public class KingdomsGameplay extends JavaPlugin
 					return true;
 				}
 			}
-			
+
 			else if(label.equals("kg-vote"))
 			{
 				if(args.length == 1)
@@ -286,7 +293,126 @@ public class KingdomsGameplay extends JavaPlugin
 				currentVote=null;
 			}
 
+			else if(label.equals("king-buy"))
+			{
+				if(sender instanceof Player)
+				{
+					Player plSender=(Player)sender;
+					if(eventHandler.getKingHandler().isKing(plSender.getName()) != null) // The sender is a king. A real one!!1
+					{
+						if(args.length == 2)
+						{
+							int price = getItemPrice(args[0]) * Integer.valueOf(args[1]);
+							if(price == 0 || args[0].equals("sheep")) // Inexistant item. TODO: implement sheep.
+							{
+								sender.sendMessage("I'm sorry, my Lord, but the item you want to purchase is not available.");
+								return false;
+							}
+
+							ItemStack[] invContents = plSender.getInventory().getContents();
+							int goldSum=0;
+
+							for(int i=0; i<invContents.length; i++)
+								if(invContents[i] != null && invContents[i].getType() == Material.GOLD_NUGGET)
+									goldSum += invContents[i].getAmount();
+
+							if(goldSum < price)
+							{
+								sender.sendMessage("I'm sorry, my Lord, but you do not have enough money to buy that.");
+								return true;
+							}
+
+							while(price > 0)
+							{
+								int id=plSender.getInventory().first(Material.GOLD_NUGGET);
+								if(invContents[id].getAmount() > price)
+								{
+									invContents[id].setAmount(invContents[id].getAmount() - price);
+									price=0;
+								}
+								else
+								{
+									price -= invContents[id].getAmount();
+									plSender.getInventory().clear(id);
+								}
+							}
+
+							ItemStack[] purchased = getPurchasedItemStack(args[0], Integer.valueOf(args[1]));
+							for(int i=0; i<purchased.length; i++)
+								plSender.getInventory().addItem(purchased[i]);
+
+							sender.sendMessage("All right, my Lord! Here is what you've purchased!");
+							return true;
+						}
+					}
+					else
+					{
+						sender.sendMessage("You must be the King to perform that action!");
+						return false;
+					}
+				}
+				else
+				{
+					sender.sendMessage("You must be the King to perform that action!");
+					return false;
+				}
+			}
+
 			return false;
 		}
+
+	int getItemPrice(String itemName)
+	{
+		if(getConfig().getInt("costs."+itemName, -1) == -1)
+			return 0;
+		return getConfig().getInt("costs."+itemName);
+	}
+
+	ItemStack[] getPurchasedItemStack(String itemName, int number)
+	{
+		if(itemName.equals("chestplate") || itemName.equals("sword") || itemName.equals("cobble")) // Unitary stacks
+		{
+			ItemStack base;
+			if(itemName.equals("chestplate"))		base=new ItemStack(Material.IRON_CHESTPLATE);
+			else if(itemName.equals("sword"))		base=new ItemStack(Material.IRON_SWORD);
+			else if(itemName.equals("cobble"))		base=new ItemStack(Material.COBBLESTONE, 64);
+			else									return new ItemStack[0];
+			
+			ItemStack[] output=new ItemStack[number];
+			for(int i=0; i<output.length; i++)
+				output[i]=base;
+
+			return output;
+		}
+		else
+		{
+			ItemStack base;
+			if(itemName.equals("wool"))				base=new ItemStack(Material.WOOL, 64);
+			else if(itemName.equals("iron"))		base=new ItemStack(Material.IRON_INGOT, 64);
+			else if(itemName.equals("log"))			base=new ItemStack(Material.LOG, 64);
+			else if(itemName.equals("diamond"))		base=new ItemStack(Material.DIAMOND, 64);
+			else if(itemName.equals("wart"))		base=new ItemStack(Material.NETHER_WARTS, 64);
+			else if(itemName.equals("glowstone"))	base=new ItemStack(Material.GLOWSTONE_DUST, 64);
+			else if(itemName.equals("gunpowder"))	base=new ItemStack(Material.SULPHUR, 64);
+			else if(itemName.equals("enchanting"))	base=new ItemStack(Material.ENCHANTMENT_TABLE);
+			else if(itemName.equals("brewing"))		base=new ItemStack(Material.BREWING_STAND_ITEM);
+			else									return new ItemStack[0];
+
+			int outSize=number/64;
+			if(number%64 > 0)
+				outSize++;
+			ItemStack[] output=new ItemStack[outSize];
+			for(int i=0; i<number/64; i++)
+				output[i]=base;
+
+			if((number % 64) > 0)
+			{
+				ItemStack last=new ItemStack(base.getType(), number%64);
+				output[outSize-1]=last;
+			}
+
+			return output;
+		}
+	}
 }
 
