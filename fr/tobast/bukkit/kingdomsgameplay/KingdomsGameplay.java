@@ -38,6 +38,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.EntityType;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -303,9 +304,14 @@ public class KingdomsGameplay extends JavaPlugin
 						if(args.length == 2)
 						{
 							int price = getItemPrice(args[0]) * Integer.valueOf(args[1]);
-							if(price == 0 || args[0].equals("sheep")) // Inexistant item. TODO: implement sheep.
+							if(price == -1)
 							{
 								sender.sendMessage("I'm sorry, my Lord, but the item you want to purchase is not available.");
+								return false;
+							}
+							if(price==0 || Integer.valueOf(args[1]) <= 0)
+							{
+								sender.sendMessage("I'm sorry, my Lord, but you must buy at least one thing!");
 								return false;
 							}
 
@@ -337,9 +343,18 @@ public class KingdomsGameplay extends JavaPlugin
 								}
 							}
 
-							ItemStack[] purchased = getPurchasedItemStack(args[0], Integer.valueOf(args[1]));
-							for(int i=0; i<purchased.length; i++)
-								plSender.getInventory().addItem(purchased[i]);
+							if(args[0].equals("sheep"))
+							{
+								int number=Integer.valueOf(args[1]);
+								for(int i=0; i<number; i++)
+									plSender.getWorld().spawnCreature(plSender.getLocation(), EntityType.SHEEP);
+							}
+							else
+							{
+								ItemStack[] purchased = getPurchasedItemStack(args[0], Integer.valueOf(args[1]));
+								for(int i=0; i<purchased.length; i++)
+									plSender.getInventory().addItem(purchased[i]);
+							}
 
 							sender.sendMessage("All right, my Lord! Here is what you've purchased!");
 							return true;
@@ -363,9 +378,7 @@ public class KingdomsGameplay extends JavaPlugin
 
 	int getItemPrice(String itemName)
 	{
-		if(getConfig().getInt("costs."+itemName, -1) == -1)
-			return 0;
-		return getConfig().getInt("costs."+itemName);
+		return getConfig().getInt("costs."+itemName, -1);
 	}
 
 	ItemStack[] getPurchasedItemStack(String itemName, int number)
