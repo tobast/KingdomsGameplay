@@ -124,8 +124,9 @@ public class EventManager implements Listener
 			boolean newPlayer=false;
 
 			if(beginTime<0) {
-				beginTime = e.getPlayer().getLocation().getWorld().getFullTime();
-				log.info("Game started with time t="+beginTime);
+				World world=instance.getServer().getWorld(instance.getConfig().getString("worlds.main"));
+				world.setTime(0); // Setting full time shall break some others plugins
+				beginTime = world.getFullTime();
 				mapInt.writeBeginTime(beginTime);
 			}
 
