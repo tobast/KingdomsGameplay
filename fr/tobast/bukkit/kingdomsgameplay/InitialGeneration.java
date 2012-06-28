@@ -51,9 +51,9 @@ public class InitialGeneration
 {
 	// PARAMETERS - Feel free to change that
 
-	public static final int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
-	public static final int rangeToBase1=150; // Maximum distance of base 2 to the base 1
-	public static final int baseRadius=25; // Radius of a base
+	public static int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
+	public static int rangeToBase1=150; // Maximum distance of base 2 to the base 1
+	public static int baseRadius=25; // Radius of a base
 
 	// END PARAMETERS
 
@@ -64,11 +64,14 @@ public class InitialGeneration
 	public InitialGeneration(JavaPlugin i_instance)
 	{
 		instance=i_instance;
+		rangeToOrigin=instance.getConfig().getInt("gen.distanceToOrigin", rangeToOrigin);
+		rangeToBase1=instance.getConfig().getInt("gen.basesDistance", rangeToBase1);
+		baseRadius=instance.getConfig().getInt("geometry.baseRadius", baseRadius);
 	}
 
 	public World getDefaultWorld()
 	{
-		return instance.getServer().getWorld("world"); // TODO get the real world
+		return instance.getServer().getWorld(instance.getConfig().getString("worlds.main"));
 	}
 
 	public Location[] getBases()

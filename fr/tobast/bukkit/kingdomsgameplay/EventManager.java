@@ -92,6 +92,8 @@ public class EventManager implements Listener
 	private int days_chestOpening;
 	private int days_baseBreaking;
 	private int days_spongeHarming;
+	
+	private long beginTime=0;
 
 	JavaPlugin instance;
 
@@ -229,7 +231,7 @@ public class EventManager implements Listener
 				mapInt.newChest(e.getBlock().getLocation(), plTeam);
 			}
 
-			//		long time=e.getBlock().getWorld().getFullTime(), day=time/24000;
+			long day=currDayNum();
 			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 
 			ItemStack currSt;
@@ -250,7 +252,19 @@ public class EventManager implements Listener
 				case ENNEMY_NOMANSLAND:
 				case ENNEMY:
 					Material blockType=e.getBlock().getType();
-					if(blockType!=Material.TNT && blockType!=Material.LEVER)
+					if(e.getBlock().getTypeId() == instance.getConfig().getInt("block.ennemyBase.allowedId",0) && currDayNum() >= instance.getConfig().getInt("block.ennemyBase.sinceDay",0))
+					{
+						int cost=instance.getConfig().getInt("block.ennemyBase.allowedCost",5);
+						currSt=e.getPlayer().getItemInHand();
+						if(currSt.getAmount() >=cost-1) // 5 to 1
+							currSt.setAmount(currSt.getAmount()-cost+1);
+						else
+						{
+							e.setCancelled(true);
+							e.getPlayer().sendMessage("You're in ennemy zone, placing this block costs "+cost+"!");
+						}
+					}
+					else if(blockType!=Material.TNT && blockType!=Material.LEVER)
 					{
 						e.setCancelled(true);
 						e.getPlayer().sendMessage("You cannot build on the ennemy base and the surrounding no man's land, except TNT and levers!");
@@ -276,7 +290,7 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.NORMAL)
 		public void onBlockDamageEvent(BlockDamageEvent e)
 		{
-			long day=e.getBlock().getLocation().getWorld().getFullTime() / 24000;
+			long day=currDayNum();
 			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
 			Player player=e.getPlayer();
 
@@ -338,7 +352,7 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGHEST)
 		public void onBlockBreakEvent(BlockBreakEvent e)
 		{
-			long day=e.getBlock().getLocation().getWorld().getFullTime() / 24000;
+			long day=currDayNum();
 			if(e.getBlock().getType() == Material.CHEST)
 			{
 				if(day < days_chestOpening && mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getBlock().getLocation()))
@@ -563,7 +577,7 @@ public class EventManager implements Listener
 	@EventHandler(priority=EventPriority.HIGH)
 		public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
 		{
-			long day=e.getEntity().getLocation().getWorld().getFullTime()/24000; // A bit hacky, huh?
+			long day=currDayNum();
 			if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
 			{
 				if(e.getDamager().getType()==EntityType.PLAYER)
@@ -583,7 +597,7 @@ public class EventManager implements Listener
 		{
 			List<Block> exploded=new ArrayList<Block>();
 			exploded.addAll(e.blockList());
-			long day=e.getLocation().getWorld().getFullTime() / 24000;
+			long day=currDayNum();
 
 			for(int i=0;i<exploded.size();i++)
 			{
@@ -714,6 +728,11 @@ public class EventManager implements Listener
 			v.setZ(v.getZ()*-1);
 			wool_a.add(v);
 		}
+	}
+	
+	public long currDayNum()
+	{
+		return (instance.getServer().getWorld(instance.getConfig().getString("worlds.main")).getFullTime() - beginTime) / 24000;
 	}
 }
 

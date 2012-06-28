@@ -74,6 +74,22 @@ public class KingdomsGameplay extends JavaPlugin
 	public void loadConfig()
 	{
 		// ===== Set default values =====
+		
+		// Generation
+		getConfig().addDefault("gen.basesDistance", 150);
+		getConfig().addDefault("gen.distanceToOrigin", 250);
+		
+		// Geometry
+		getConfig().addDefault("geometry.baseRadius", 25);
+		
+		// Blocks
+		getConfig().addDefault("block.ennemyBase.allowedId", 4); // smoothstone
+		getConfig().addDefault("block.ennemyBase.allowedCost", 5); // 5 for 1
+		getConfig().addDefault("block.ennemyBase.sinceDay", 0);
+
+		// Worlds
+		getConfig().addDefault("worlds.main", "world");
+		getConfig().addDefault("worlds.ignored", java.util.Collections.emptyList());
 
 		// Days
 		getConfig().addDefault("days.harmPlayer", 2);
