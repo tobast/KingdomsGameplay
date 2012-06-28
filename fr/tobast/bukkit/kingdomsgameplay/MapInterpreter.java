@@ -173,6 +173,13 @@ public class MapInterpreter
 							else if(split[4].startsWith("B"))
 								chests_b.add(loc);
 						}
+						
+						else if(line.startsWith("BT;")) //Begin time. Line type : "BT;time"
+						{
+							String[] split=line.split(";");
+							long time=Long.valueOf(split[1]);
+							((fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay)instance).getEventHandler().setBeginTime(time);
+						}
 					}
 				}
 				finally {
@@ -683,6 +690,23 @@ public class MapInterpreter
 			Writer writer=new BufferedWriter(new FileWriter(new File(confpath))); // Open in truncate mode
 			try {
 				rewriteConfig(writer);
+			}
+			finally {
+				writer.close();
+			}
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void writeBeginTime(long time) {
+		// File processing
+		try {
+			Writer writer=new BufferedWriter(new FileWriter(new File(confpath), true));
+			try {
+				String line="BT;"+String.valueOf(time);
+				writer.write(line+"\n");
 			}
 			finally {
 				writer.close();

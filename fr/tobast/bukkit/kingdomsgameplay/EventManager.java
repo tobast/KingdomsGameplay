@@ -94,6 +94,8 @@ public class EventManager implements Listener
 	private int days_spongeHarming;
 	
 	private long beginTime=-1;
+	public final long getBeginTime() { return beginTime; }
+	public void setBeginTime(final long time) { beginTime=time; }
 
 	JavaPlugin instance;
 
@@ -120,6 +122,12 @@ public class EventManager implements Listener
 			Team playerTeam=mapInt.getPlayerTeam(playerName);
 
 			boolean newPlayer=false;
+
+			if(beginTime<0) {
+				beginTime = e.getPlayer().getLocation().getWorld().getFullTime();
+				log.info("Game started with time t="+beginTime);
+				mapInt.writeBeginTime(beginTime);
+			}
 
 			if(playerTeam==null) // The player isn't assigned to any team
 			{
@@ -165,11 +173,6 @@ public class EventManager implements Listener
 				}
 				else
 					e.getPlayer().sendMessage("You swore allegence to "+kingName+", your king.");
-			}
-
-			if(beginTime<0) {
-				beginTime = e.getPlayer().getLocation().getWorld().getFullTime();
-				log.info("Game started with time t="+beginTime);
 			}
 		}
 
@@ -500,7 +503,7 @@ public class EventManager implements Listener
 					}
 				}
 
-				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
+				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
 				if(locationArray[0]!=null) // A flag was activated
 				{
 					// Zone check (each corner)

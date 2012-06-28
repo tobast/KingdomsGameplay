@@ -56,6 +56,7 @@ public class KingdomsGameplay extends JavaPlugin
 {
 	protected MapInterpreter mapInt=null;
 	protected EventManager eventHandler=null;
+	public final EventManager getEventHandler() { return eventHandler; }
 	protected int[] currentVote=null;
 	public final int[] getCurrentVote() { return currentVote; }
 	public void resetVote() { currentVote=null; }
