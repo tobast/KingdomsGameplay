@@ -158,7 +158,7 @@ public class KingdomsGameplay extends JavaPlugin
 
 			else if(label.equals("daynum"))
 			{
-				long day=mapInt.getSponges()[0].getWorld().getFullTime() / 24000;
+				long day=eventHandler.currDayNum();
 				sender.sendMessage("Current day is day "+String.valueOf(day)+".");
 				return true;
 			}

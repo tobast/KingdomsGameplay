@@ -62,7 +62,7 @@ import org.bukkit.util.Vector;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
-// import java.util.logging.Logger;
+import java.util.logging.Logger; // REMOVE
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -81,7 +81,7 @@ public class EventManager implements Listener
 	protected KingHandler kingHandler;
 	public final KingHandler getKingHandler() { return kingHandler; }
 
-	//	Logger log=Logger.getLogger("Minecraft");
+	Logger log=Logger.getLogger("Minecraft"); // REMOVE
 
 	protected static final int neutralZoneSlowness=3;
 	protected static final int ennemyZoneSlowness=10;
@@ -93,7 +93,7 @@ public class EventManager implements Listener
 	private int days_baseBreaking;
 	private int days_spongeHarming;
 	
-	private long beginTime=0;
+	private long beginTime=-1;
 
 	JavaPlugin instance;
 
@@ -165,6 +165,11 @@ public class EventManager implements Listener
 				}
 				else
 					e.getPlayer().sendMessage("You swore allegence to "+kingName+", your king.");
+			}
+
+			if(beginTime<0) {
+				beginTime = e.getPlayer().getLocation().getWorld().getFullTime();
+				log.info("Game started with time t="+beginTime);
 			}
 		}
 
@@ -256,7 +261,7 @@ public class EventManager implements Listener
 					{
 						int cost=instance.getConfig().getInt("block.ennemyBase.allowedCost",5);
 						currSt=e.getPlayer().getItemInHand();
-						if(currSt.getAmount() >=cost-1) // 5 to 1
+						if(currSt.getAmount() >=cost-1) // cost to 1
 							currSt.setAmount(currSt.getAmount()-cost+1);
 						else
 						{
@@ -732,6 +737,8 @@ public class EventManager implements Listener
 	
 	public long currDayNum()
 	{
+		if(beginTime < 0)
+			return 0; // game isn't started yet
 		return (instance.getServer().getWorld(instance.getConfig().getString("worlds.main")).getFullTime() - beginTime) / 24000;
 	}
 }
