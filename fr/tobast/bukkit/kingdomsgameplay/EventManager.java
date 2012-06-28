@@ -101,10 +101,11 @@ public class EventManager implements Listener
 
 	ArrayList<Location> fedSponges=new ArrayList<Location>();
 
-	public EventManager(MapInterpreter i_mapInt, JavaPlugin instance)
+	public EventManager(MapInterpreter i_mapInt, JavaPlugin instance, long beginTime)
 	{
 		mapInt=i_mapInt;
 		this.instance=instance;
+		this.beginTime=beginTime;
 
 		days_playerHarming = instance.getConfig().getInt("days.harmPlayer");
 		days_chestOpening = instance.getConfig().getInt("days.chest");
@@ -124,10 +125,7 @@ public class EventManager implements Listener
 			boolean newPlayer=false;
 
 			if(beginTime<0) {
-				World world=instance.getServer().getWorld(instance.getConfig().getString("worlds.main"));
-				world.setTime(0); // Setting full time shall break some others plugins
-				beginTime = world.getFullTime();
-				mapInt.writeBeginTime(beginTime);
+				dayReset();
 			}
 
 			if(playerTeam==null) // The player isn't assigned to any team
@@ -744,6 +742,13 @@ public class EventManager implements Listener
 		if(beginTime < 0)
 			return 0; // game isn't started yet
 		return (instance.getServer().getWorld(instance.getConfig().getString("worlds.main")).getFullTime() - beginTime) / 24000;
+	}
+
+	public void dayReset() {
+		World world=instance.getServer().getWorld(instance.getConfig().getString("worlds.main"));
+		world.setTime(0); // Setting full time shall break some others plugins
+		beginTime = world.getFullTime();
+		mapInt.rewriteFullConf();
 	}
 }
 

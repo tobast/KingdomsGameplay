@@ -61,6 +61,8 @@ public class KingdomsGameplay extends JavaPlugin
 	public final int[] getCurrentVote() { return currentVote; }
 	public void resetVote() { currentVote=null; }
 	protected ArrayList<String> voteNames=null;
+	protected long beginTime=-1;
+	public void setBeginTime(final long time) { this.beginTime=time; }
 
 	Logger log=Logger.getLogger("minecraft");
 
@@ -68,7 +70,7 @@ public class KingdomsGameplay extends JavaPlugin
 	{
 		loadConfig();
 		mapInt=new MapInterpreter(this);
-		eventHandler=new EventManager(mapInt, this);
+		eventHandler=new EventManager(mapInt, this, beginTime);
 		getServer().getPluginManager().registerEvents(eventHandler, this);
 	}
 
@@ -161,6 +163,12 @@ public class KingdomsGameplay extends JavaPlugin
 			{
 				long day=eventHandler.currDayNum();
 				sender.sendMessage("Current day is day "+String.valueOf(day)+".");
+				return true;
+			}
+
+			else if(label.equals("dayreset"))
+			{
+				eventHandler.dayReset();
 				return true;
 			}
 

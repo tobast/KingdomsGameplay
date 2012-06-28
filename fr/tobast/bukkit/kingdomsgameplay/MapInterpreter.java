@@ -178,7 +178,7 @@ public class MapInterpreter
 						{
 							String[] split=line.split(";");
 							long time=Long.valueOf(split[1]);
-							((fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay)instance).getEventHandler().setBeginTime(time);
+							((fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay)instance).setBeginTime(time);
 						}
 					}
 				}
@@ -609,6 +609,9 @@ public class MapInterpreter
 				writer.write("KG;"+kings[0]+";R\n");
 			if(kings[1] != null)
 				writer.write("KG;"+kings[1]+";B\n");
+
+			// Begin time
+			writer.write("BT;"+String.valueOf(((fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay)instance).getEventHandler().getBeginTime())+"\n");
 		}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -700,13 +703,12 @@ public class MapInterpreter
 		}
 	}
 
-	public void writeBeginTime(long time) {
+	public void rewriteFullConf() {
 		// File processing
 		try {
 			Writer writer=new BufferedWriter(new FileWriter(new File(confpath), true));
 			try {
-				String line="BT;"+String.valueOf(time);
-				writer.write(line+"\n");
+				rewriteConfig(writer);
 			}
 			finally {
 				writer.close();
