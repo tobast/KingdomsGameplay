@@ -125,7 +125,7 @@ public class MapInterpreter
 
 				try {
 					String line=null;
-					World defaultWorld=instance.getServer().getWorld("world");
+					World defaultWorld=generator.getDefaultWorld();
 					while ((line=reader.readLine()) != null)
 					{	
 						if(line.startsWith("FL;")) // Flag. Line type : « FL;x;y;z;(R|B) »
