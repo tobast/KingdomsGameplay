@@ -44,6 +44,7 @@ import org.bukkit.block.Block;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.util.Vector;
+import org.bukkit.block.Biome;
 
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 
@@ -51,7 +52,7 @@ public class InitialGeneration
 {
 	// PARAMETERS - Feel free to change that
 
-	public static int rangeToOrigin=250; // Maximum distance of base 1 to the origin point of the map
+//	public static int rangeToOrigin=1500; // Maximum distance of base 1 to the origin point of the map
 	public static int rangeToBase1=150; // Maximum distance of base 2 to the base 1
 	public static int baseRadius=25; // Radius of a base
 
@@ -64,7 +65,7 @@ public class InitialGeneration
 	public InitialGeneration(JavaPlugin i_instance)
 	{
 		instance=i_instance;
-		rangeToOrigin=instance.getConfig().getInt("gen.distanceToOrigin", rangeToOrigin);
+//		rangeToOrigin=instance.getConfig().getInt("gen.distanceToOrigin", rangeToOrigin);
 		rangeToBase1=instance.getConfig().getInt("gen.basesDistance", rangeToBase1);
 		baseRadius=instance.getConfig().getInt("geometry.baseRadius", baseRadius);
 	}
@@ -87,31 +88,40 @@ public class InitialGeneration
 		World dftWorld=getDefaultWorld();
 		bases = new Location[2];
 
-		// Generate the 1st base
-		bases[0]=new Location(dftWorld, rand.nextInt(2*rangeToOrigin)-rangeToOrigin, 256, rand.nextInt(2*rangeToOrigin)-rangeToOrigin);
+		do {
+			// Generate the 1st base
+			bases[0]=new Location(dftWorld, rand.nextInt()%10000, 256, rand.nextInt()%10000);
+
+			// Generate the 2nd base
+			// Apply Pythagoras' theorem
+			int square=((int)Math.pow(rangeToBase1, 2));
+			double x1=rand.nextInt(square);
+			double x2=Math.ceil(Math.sqrt(square - Math.abs(x1)));
+			x1=Math.ceil(Math.sqrt(x1));
+			if(rand.nextInt(2)==0)
+				x1=x1*-1;
+			if(rand.nextInt(2)==0)
+				x2=x2*-1;
+
+			x1+=bases[0].getX();
+			x2+=bases[0].getZ();
+
+			bases[1]=new Location(dftWorld, x1, 256, x2);
+		} while(!basePossibleBiome(bases[0].getBlock().getBiome()) || !basePossibleBiome(bases[1].getBlock().getBiome()));
+
+		// Lower the y value to the floor
 		while(bases[0].getBlock().getRelative(BlockFace.DOWN).getType() == Material.AIR && bases[0].getY() > 0)
 			bases[0].add(0,-1,0);
-
-		// Generate the 2nd base
-		// Apply Pythagoras' theorem
-		int square=((int)Math.pow(rangeToBase1, 2));
-		double x1=rand.nextInt(square);
-		double x2=Math.ceil(Math.sqrt(square - Math.abs(x1)));
-		x1=Math.ceil(Math.sqrt(x1));
-		if(rand.nextInt(2)==0)
-			x1=x1*-1;
-		if(rand.nextInt(2)==0)
-			x2=x2*-1;
-
-		x1+=bases[0].getX();
-		x2+=bases[0].getZ();
-
-		bases[1]=new Location(dftWorld, x1, 256, x2);
-
 		while(bases[1].getBlock().getRelative(BlockFace.DOWN).getType() == Material.AIR && bases[1].getY() > 0)
 			bases[1].add(0,-1,0);
 
 		drawBases();
+	}
+
+	protected boolean basePossibleBiome(Biome biome) {
+		if(biome == Biome.OCEAN || biome == Biome.RIVER || biome == Biome.FROZEN_OCEAN 	|| biome == Biome.FROZEN_RIVER)
+			return false;
+		return true;
 	}
 
 	protected void drawBases() // plants a flag on each base

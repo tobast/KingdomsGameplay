@@ -80,7 +80,7 @@ public class KingdomsGameplay extends JavaPlugin
 		
 		// Generation
 		getConfig().addDefault("gen.basesDistance", 150);
-		getConfig().addDefault("gen.distanceToOrigin", 250);
+//		getConfig().addDefault("gen.distanceToOrigin", 250); // Not longer an option.
 		
 		// Geometry
 		getConfig().addDefault("geometry.baseRadius", 25);
