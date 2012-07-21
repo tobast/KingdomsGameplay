@@ -51,10 +51,12 @@ import java.util.logging.Logger;
 import fr.tobast.bukkit.kingdomsgameplay.EventManager;
 import fr.tobast.bukkit.kingdomsgameplay.MapInterpreter;
 import fr.tobast.bukkit.kingdomsgameplay.Team;
+import fr.tobast.bukkit.kingdomsgameplay.RunnableRoutine;
 
 public class KingdomsGameplay extends JavaPlugin
 {
 	protected MapInterpreter mapInt=null;
+	public final MapInterpreter getMapInt() { return mapInt; }
 	protected EventManager eventHandler=null;
 	public final EventManager getEventHandler() { return eventHandler; }
 	protected int[] currentVote=null;
@@ -72,6 +74,7 @@ public class KingdomsGameplay extends JavaPlugin
 		mapInt=new MapInterpreter(this);
 		eventHandler=new EventManager(mapInt, this, beginTime);
 		getServer().getPluginManager().registerEvents(eventHandler, this);
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new RunnableRoutine(this), 0, 1200);
 	}
 
 	public void loadConfig()
@@ -99,6 +102,9 @@ public class KingdomsGameplay extends JavaPlugin
 		getConfig().addDefault("days.chest", 3);
 		getConfig().addDefault("days.breakBase", 5);
 		getConfig().addDefault("days.harmSponge", 7);
+
+		// Gameplay
+		getConfig().addDefault("gameplay.compassPointsEnnemyTill", 5);
 
 		// King costs
 		getConfig().addDefault("costs.wool", 3);

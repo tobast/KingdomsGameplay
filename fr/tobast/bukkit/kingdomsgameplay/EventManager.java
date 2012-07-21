@@ -178,6 +178,10 @@ public class EventManager implements Listener
 				else
 					e.getPlayer().sendMessage("You swore allegence to "+kingName+", your king.");
 			}
+
+			int pointEnnemyTill = instance.getConfig().getInt("gameplay.compassPointsEnnemyTill");
+			if(pointEnnemyTill >= 0 && currDayNum() >= pointEnnemyTill)
+				mapInt.setPlayerCompassToSponge(e.getPlayer());
 		}
 
 	@EventHandler(priority=EventPriority.MONITOR)

@@ -45,6 +45,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration;
@@ -716,6 +717,15 @@ public class MapInterpreter
 		}
 		catch(IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void setPlayerCompassToSponge(Player player) {
+		if(getPlayerTeam(player.getName()) == Team.RED) {
+			player.setCompassTarget(sponges[1]);
+		}
+		else {
+			player.setCompassTarget(sponges[0]);
 		}
 	}
 }
