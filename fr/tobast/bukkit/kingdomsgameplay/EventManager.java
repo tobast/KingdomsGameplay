@@ -43,6 +43,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -636,8 +637,34 @@ public class EventManager implements Listener
 	}
 
 	protected boolean coordEquals(Location l1, Location l2) {
-		if(l1.getX() == l2.getX() && l1.getY() == l2.getY() && l1.getZ() == l2.getZ())
+		if(l1.getX() == l2.getX() && l1.getY() == l2.getY() && l1.getZ() == l2.getZ() && l1.getWorld() == l2.getWorld())
 			return true;
+		return false;
+	}
+
+	@EventHandler 
+	protected void onPlayerBucketEmptyEvent(PlayerBucketEmptyEvent e) {
+		if(e.getBucket() == Material.LAVA_BUCKET) {
+			if(aboveSponge(e.getPlayer().getLocation())) {
+				e.setCancelled(true);
+				e.getPlayer().sendMessage("You cannot empty a lava bucket above or around a sponge!");
+				return;
+			}
+		}
+	}
+
+	protected boolean aboveSponge(Location eventLoc) {
+		Location sponges[] = mapInt.getSponges();
+		if(sponges[0].getWorld() == eventLoc.getWorld() && sponges[0].getY() <= eventLoc.getY() - 10 &&
+				sponges[0].getX() + 10 > eventLoc.getX() && sponges[0].getX() - 10 < eventLoc.getX() &&
+				sponges[0].getZ() + 10 > eventLoc.getZ() && sponges[0].getZ() - 10 < eventLoc.getZ())
+			return true;
+
+		if(sponges[1].getWorld() == eventLoc.getWorld() && sponges[1].getY() >= eventLoc.getY() - 10 &&
+				sponges[1].getX() + 10 > eventLoc.getX() && sponges[1].getX() - 10 < eventLoc.getX() &&
+				sponges[1].getZ() + 10 > eventLoc.getZ() && sponges[1].getZ() - 10 < eventLoc.getZ())
+			return true;
+		
 		return false;
 	}
 
