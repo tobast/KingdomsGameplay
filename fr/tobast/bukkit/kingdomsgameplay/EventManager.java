@@ -42,6 +42,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -64,6 +65,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger; // REMOVE
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Date;
 
@@ -92,10 +94,12 @@ public class EventManager implements Listener
 	private int days_chestOpening;
 	private int days_baseBreaking;
 	private int days_spongeHarming;
-	
+
 	private long beginTime=-1;
 	public final long getBeginTime() { return beginTime; }
 	public void setBeginTime(final long time) { beginTime=time; }
+
+	private HashMap<String,MapInterpreter.ZoneType> prevPlayerZone = new HashMap<String,MapInterpreter.ZoneType>();
 
 	JavaPlugin instance;
 
@@ -155,8 +159,8 @@ public class EventManager implements Listener
 				if(mapInt.getTeamSize(playerTeam) == 1 && newPlayer)
 				{
 					// First player to log into that playerTeam
-//					kingHandler.setKing(e.getPlayer(), playerTeam);
-//					e.getPlayer().sendMessage("You are the king of your team. Hail to the king!");
+					//					kingHandler.setKing(e.getPlayer(), playerTeam);
+					//					e.getPlayer().sendMessage("You are the king of your team. Hail to the king!");
 					e.getPlayer().getInventory().addItem(new ItemStack(Material.GOLD_HELMET));
 					e.getPlayer().sendMessage("The kingdom is at the moment kingless, but you received a crown from the Gods.");
 				}
@@ -176,58 +180,58 @@ public class EventManager implements Listener
 		}
 
 	@EventHandler(priority=EventPriority.MONITOR)
-		public void onPlayerQuitEvent(PlayerQuitEvent e)
+	public void onPlayerQuitEvent(PlayerQuitEvent e)
+	{
+		String plName=e.getPlayer().getName();
+		Team team=kingHandler.isKing(plName);
+		if(team != null)
+			kingHandler.dismissTeamKing(team);
+	}
+
+	@EventHandler(priority=EventPriority.MONITOR)
+	public void onEntityDeathEvent(EntityDeathEvent e)
+	{
+		if(e.getEntityType() == EntityType.PLAYER)
 		{
-			String plName=e.getPlayer().getName();
+			Player player = (Player)(e.getEntity());
+			String plName = player.getName();
 			Team team=kingHandler.isKing(plName);
 			if(team != null)
 				kingHandler.dismissTeamKing(team);
 		}
-
-	@EventHandler(priority=EventPriority.MONITOR)
-		public void onEntityDeathEvent(EntityDeathEvent e)
-		{
-			if(e.getEntityType() == EntityType.PLAYER)
-			{
-				Player player = (Player)(e.getEntity());
-				String plName = player.getName();
-				Team team=kingHandler.isKing(plName);
-				if(team != null)
-					kingHandler.dismissTeamKing(team);
-			}
-		}
-	
-	@EventHandler(priority=EventPriority.NORMAL)
-		public void onInventoryCloseEvent(InventoryCloseEvent e)
-		{
-			if(e.getPlayer() instanceof Player)
-			{
-				Player player=(Player)(e.getPlayer());
-				Team plTeam=mapInt.getPlayerTeam(player.getName());
-
-				if(player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() == Material.GOLD_HELMET) // Player is crowned
-					if(kingHandler.getTeamKing(plTeam) == null)
-						kingHandler.setKing(player, plTeam);
-
-				if(player.getName().equals(kingHandler.getTeamKing(plTeam)))
-					if(player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType() != Material.GOLD_HELMET)
-						kingHandler.dismissTeamKing(plTeam);
-			}
-		}
+	}
 
 	@EventHandler(priority=EventPriority.NORMAL)
-		public void onPlayerRespawnEvent(PlayerRespawnEvent e)
+	public void onInventoryCloseEvent(InventoryCloseEvent e)
+	{
+		if(e.getPlayer() instanceof Player)
 		{
-			if(e.isBedSpawn())
-				return; 
+			Player player=(Player)(e.getPlayer());
+			Team plTeam=mapInt.getPlayerTeam(player.getName());
 
-			Location spawn=mapInt.getPlayerSpawn(e.getPlayer().getName());
-			if(spawn!=null)
-			{
-				spawn.getChunk().load(); // Quite a great thing to not fall immediately
-				e.setRespawnLocation(spawn);
-			}
+			if(player.getInventory().getHelmet() != null && player.getInventory().getHelmet().getType() == Material.GOLD_HELMET) // Player is crowned
+				if(kingHandler.getTeamKing(plTeam) == null)
+					kingHandler.setKing(player, plTeam);
+
+			if(player.getName().equals(kingHandler.getTeamKing(plTeam)))
+				if(player.getInventory().getHelmet() == null || player.getInventory().getHelmet().getType() != Material.GOLD_HELMET)
+					kingHandler.dismissTeamKing(plTeam);
 		}
+	}
+
+	@EventHandler(priority=EventPriority.NORMAL)
+	public void onPlayerRespawnEvent(PlayerRespawnEvent e)
+	{
+		if(e.isBedSpawn())
+			return; 
+
+		Location spawn=mapInt.getPlayerSpawn(e.getPlayer().getName());
+		if(spawn!=null)
+		{
+			spawn.getChunk().load(); // Quite a great thing to not fall immediately
+			e.setRespawnLocation(spawn);
+		}
+	}
 
 	@EventHandler(priority=EventPriority.HIGHEST) // Final word
 		public void onBlockPlaceEvent(BlockPlaceEvent e)
@@ -295,330 +299,347 @@ public class EventManager implements Listener
 		}
 
 	@EventHandler(priority=EventPriority.NORMAL)
-		public void onBlockDamageEvent(BlockDamageEvent e)
+	public void onBlockDamageEvent(BlockDamageEvent e)
+	{
+		long day=currDayNum();
+		ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
+		Player player=e.getPlayer();
+
+		switch(plZone)
 		{
-			long day=currDayNum();
-			ZoneType plZone = mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation());
-			Player player=e.getPlayer();
+			case ALLY:
+				if(player.hasPotionEffect(PotionEffectType.getByName("SLOW_DIGGING")))
+					player.removePotionEffect(PotionEffectType.getByName("SLOW_DIGGING"));
+				break;
 
-			switch(plZone)
-			{
-				case ALLY:
-					if(player.hasPotionEffect(PotionEffectType.getByName("SLOW_DIGGING")))
-						player.removePotionEffect(PotionEffectType.getByName("SLOW_DIGGING"));
-					break;
+			case NEUTRAL:
+			case ALLY_NOMANSLAND:
+				player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(20, neutralZoneSlowness));
+				break;
 
-				case NEUTRAL:
-				case ALLY_NOMANSLAND:
-					player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(20, neutralZoneSlowness));
-					break;
-
-				case ENNEMY_NOMANSLAND:
-					if(day < days_baseBreaking)
-					{
-						e.setCancelled(true);
-						if((new Date()).getTime() - 30000 > lastErrorTimestamp)
-						{
-							e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
-							lastErrorTimestamp=(new Date()).getTime();
-						}
-						return;
-					}
-					player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
-					break;
-
-				case ENNEMY:
-					if(day < days_baseBreaking)
-					{
-						e.setCancelled(true);
-						if((new Date()).getTime() - 30000 > lastErrorTimestamp)
-						{
-							e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
-							lastErrorTimestamp=(new Date()).getTime();
-						}
-						return;
-					}
-
-					Material blockType=e.getBlock().getType();
-					if(blockType==Material.COBBLESTONE || blockType==Material.OBSIDIAN ||
-							blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
-					{
-						e.setCancelled(true);
-						player.sendMessage("This block is not damageable in the ennemy's base (at least, by an human being).");
-					}
-					else
-						player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
-					break;
-
-
-				default:
-					break;
-			}
-		}
-
-	@EventHandler(priority=EventPriority.HIGHEST)
-		public void onBlockBreakEvent(BlockBreakEvent e)
-		{
-			long day=currDayNum();
-			if(e.getBlock().getType() == Material.CHEST)
-			{
-				if(day < days_chestOpening && mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getBlock().getLocation()))
+			case ENNEMY_NOMANSLAND:
+				if(day < days_baseBreaking)
 				{
 					e.setCancelled(true);
-					e.getPlayer().sendMessage("You cannot break ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
+					if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+					{
+						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						lastErrorTimestamp=(new Date()).getTime();
+					}
 					return;
 				}
-				mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
-			}
+				player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
+				break;
 
-			if(e.getBlock().getType() == Material.WOOL)
-			{
-				if(mapInt.isFlagWool(e.getBlock().getLocation()))
-				{
-					// No drops.
-					e.setCancelled(true);
-					e.getBlock().setType(Material.AIR);
-				}
-			}
-
-			if(e.getBlock().getType() == Material.SPONGE)
-			{
-				if(day < days_spongeHarming)
+			case ENNEMY:
+				if(day < days_baseBreaking)
 				{
 					e.setCancelled(true);
-					e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
+					if((new Date()).getTime() - 30000 > lastErrorTimestamp)
+					{
+						e.getPlayer().sendMessage("You cannot break anything in an ennemy base or no man's land before day "+String.valueOf(days_baseBreaking)+"!");
+						lastErrorTimestamp=(new Date()).getTime();
+					}
 					return;
 				}
 
-				Team spongeTeam=mapInt.spongeOwner(e.getBlock().getLocation());
-				Player[] onlinePlayers=instance.getServer().getOnlinePlayers();
-				for(int i=0;i<onlinePlayers.length;i++)
-				{
-					if(mapInt.getPlayerTeam(onlinePlayers[i].getName()) == spongeTeam)
-						onlinePlayers[i].sendMessage("You can hear the sponge screaming into your head...");
-				}
-
-				e.setCancelled(true);
-				Block b=e.getBlock();
-				if(b!=null)
-					b.setType(Material.AIR);
-
-				if(!mapInt.isSpongeAlive(spongeTeam))
-				{
-					Player[] players=e.getPlayer().getServer().getOnlinePlayers();
-					Team killed=mapInt.spongeOwner(e.getBlock().getLocation());
-					Team winners;
-					if(killed==Team.RED)
-						winners=Team.BLUE;
-					else if(killed==Team.BLUE)
-						winners=Team.RED;
-					else
-						return;
-
-					String message=ChatColor.RED+"The "+mapInt.teamToString(killed)+" sponge has been killed! Congratulations, "+mapInt.teamToString(winners)+" team, you won! Server will restart in 1min."+ChatColor.RESET;
-					for(int i=0;i<players.length;i++)
-						players[i].sendMessage(message);
-					// RESTART - To be working, there must be a background auto-restart script working.
-					e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableRestartServer(e.getPlayer().getServer()), 1200L); // 1200 ticks = 1*60*20 = 1min
-				}
-			}
-
-			if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
-			{
-				e.getPlayer().sendMessage("You cannot break a flagpole.");
-				e.setCancelled(true);
-				return;
-			}
-
-			if(mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
-			{
 				Material blockType=e.getBlock().getType();
-				if(blockType==Material.COBBLESTONE || blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
+				if(blockType==Material.COBBLESTONE || blockType==Material.OBSIDIAN ||
+						blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
+				{
 					e.setCancelled(true);
-				return;
-			}			
+					player.sendMessage("This block is not damageable in the ennemy's base (at least, by an human being).");
+				}
+				else
+					player.addPotionEffect(PotionEffectType.getByName("SLOW_DIGGING").createEffect(200, ennemyZoneSlowness));
+				break;
+
+
+			default:
+				break;
 		}
+	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
-		public void onBlockBurnEvent(BlockBurnEvent e)
+	public void onBlockBreakEvent(BlockBreakEvent e)
+	{
+		long day=currDayNum();
+		if(e.getBlock().getType() == Material.CHEST)
 		{
-			if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+			if(day < days_chestOpening && mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getBlock().getLocation()))
 			{
 				e.setCancelled(true);
+				e.getPlayer().sendMessage("You cannot break ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
 				return;
 			}
+			mapInt.delChest(e.getBlock().getLocation(), mapInt.chestOwner(e.getBlock().getLocation()));
 		}
+
+		if(e.getBlock().getType() == Material.WOOL)
+		{
+			if(mapInt.isFlagWool(e.getBlock().getLocation()))
+			{
+				// No drops.
+				e.setCancelled(true);
+				e.getBlock().setType(Material.AIR);
+			}
+		}
+
+		if(e.getBlock().getType() == Material.SPONGE)
+		{
+			if(day < days_spongeHarming)
+			{
+				e.setCancelled(true);
+				e.getPlayer().sendMessage("The sponge cannot be killed before day "+String.valueOf(days_spongeHarming)+"!");
+				return;
+			}
+
+			Team spongeTeam=mapInt.spongeOwner(e.getBlock().getLocation());
+			Player[] onlinePlayers=instance.getServer().getOnlinePlayers();
+			for(int i=0;i<onlinePlayers.length;i++)
+			{
+				if(mapInt.getPlayerTeam(onlinePlayers[i].getName()) == spongeTeam)
+					onlinePlayers[i].sendMessage("You can hear the sponge screaming into your head...");
+			}
+
+			e.setCancelled(true);
+			Block b=e.getBlock();
+			if(b!=null)
+				b.setType(Material.AIR);
+
+			if(!mapInt.isSpongeAlive(spongeTeam))
+			{
+				Player[] players=e.getPlayer().getServer().getOnlinePlayers();
+				Team killed=mapInt.spongeOwner(e.getBlock().getLocation());
+				Team winners;
+				if(killed==Team.RED)
+					winners=Team.BLUE;
+				else if(killed==Team.BLUE)
+					winners=Team.RED;
+				else
+					return;
+
+				String message=ChatColor.RED+"The "+mapInt.teamToString(killed)+" sponge has been killed! Congratulations, "+mapInt.teamToString(winners)+" team, you won! Server will restart in 1min."+ChatColor.RESET;
+				for(int i=0;i<players.length;i++)
+					players[i].sendMessage(message);
+				// RESTART - To be working, there must be a background auto-restart script working.
+				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableRestartServer(e.getPlayer().getServer()), 1200L); // 1200 ticks = 1*60*20 = 1min
+			}
+		}
+
+		if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+		{
+			e.getPlayer().sendMessage("You cannot break a flagpole.");
+			e.setCancelled(true);
+			return;
+		}
+
+		if(mapInt.getPlayerZone(e.getPlayer().getName(), e.getPlayer().getLocation()) == ZoneType.ENNEMY)
+		{
+			Material blockType=e.getBlock().getType();
+			if(blockType==Material.COBBLESTONE || blockType==Material.DIAMOND_BLOCK || blockType==Material.GOLD_BLOCK || blockType==Material.IRON_BLOCK)
+				e.setCancelled(true);
+			return;
+		}			
+	}
+
+	@EventHandler(priority=EventPriority.HIGHEST)
+	public void onBlockBurnEvent(BlockBurnEvent e)
+	{
+		if(mapInt.isBaseLocation(e.getBlock().getLocation()) != null && e.getBlock().getType() == Material.LOG)
+		{
+			e.setCancelled(true);
+			return;
+		}
+	}
 
 	@EventHandler(priority=EventPriority.NORMAL)
-		public void onPlayerInteractEvent(PlayerInteractEvent e)
+	public void onPlayerInteractEvent(PlayerInteractEvent e)
+	{
+		if(!e.hasBlock() || e.getClickedBlock() == null)
+			return;
+
+		if(e.getClickedBlock().getType() == Material.CHEST)
 		{
-			if(!e.hasBlock() || e.getClickedBlock() == null)
+			if(e.getClickedBlock().getLocation().getWorld().getFullTime()/24000 < days_chestOpening &&
+					mapInt.chestOwner(e.getClickedBlock().getLocation()) != null &&
+					mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
+			{
+				e.setCancelled(true);
+				e.getPlayer().sendMessage("You cannot steal from ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
 				return;
-
-			if(e.getClickedBlock().getType() == Material.CHEST)
-			{
-				if(e.getClickedBlock().getLocation().getWorld().getFullTime()/24000 < days_chestOpening &&
-						mapInt.chestOwner(e.getClickedBlock().getLocation()) != null &&
-						mapInt.getPlayerTeam(e.getPlayer().getName()) != mapInt.chestOwner(e.getClickedBlock().getLocation()))
-				{
-					e.setCancelled(true);
-					e.getPlayer().sendMessage("You cannot steal from ennemy's chests before day "+String.valueOf(days_chestOpening)+"!");
-					return;
-				}
-			}
-
-			// FLAG PLANTING
-			if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
-			{
-				// Existance check
-				for(int i=0;i<4;i++)
-				{
-					if(mapInt.baseExists(e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation()))
-					{
-						// if the flag already exists
-						Location currPtr=e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation().clone();
-
-						byte wool_color;
-						if(mapInt.isBaseLocation(currPtr) == Team.RED)
-							wool_color=14;
-						else
-							wool_color=11;
-
-						currPtr.add(1,4,0);
-						for(int j=0;j<3;j++)
-						{
-							currPtr.getBlock().setType(Material.WOOL);
-							currPtr.getBlock().setData(wool_color);
-							currPtr.add(1,0,0);	
-						}
-						currPtr.add(-1,-1,0);
-						for(int j=0;j<3;j++)
-						{
-							currPtr.getBlock().setType(Material.WOOL);
-							currPtr.getBlock().setData(wool_color);
-							currPtr.add(-1,0,0);	
-						}
-						return;
-					}
-				}
-
-				Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
-				if(locationArray[0]!=null) // A flag was activated
-				{
-					// Zone check (each corner)
-					Location loc=locationArray[0].clone();
-					int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
-					String playerName=e.getPlayer().getName();
-					ZoneType cornerType;
-					boolean ennemyZone=false;
-
-					loc.add(InitialGeneration.baseRadius, 0, InitialGeneration.baseRadius);
-					cornerType=mapInt.getPlayerZone(playerName, loc);
-					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-						ennemyZone=true;
-
-					loc.add(0,0,zoneWidth*-1);
-					cornerType=mapInt.getPlayerZone(playerName, loc);
-					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-						ennemyZone=true;
-
-					loc.add(zoneWidth*-1, 0,0);
-					cornerType=mapInt.getPlayerZone(playerName, loc);
-					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-						ennemyZone=true;
-
-					loc.add(0,0,zoneWidth);
-					cornerType=mapInt.getPlayerZone(playerName, loc);
-					if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-						ennemyZone=true;
-
-					// Check corner now.
-					if(ennemyZone)
-					{
-						e.getPlayer().sendMessage("Your new base has a part into ennemy's base or no man's land. It cannot be built.");
-						return;
-					}
-
-					Team plTeam=mapInt.getPlayerTeam(e.getPlayer().getName());
-					colourFlag(plTeam, locationArray[1], locationArray[2]);
-					mapInt.newBase(plTeam, locationArray[0]);
-
-					e.getPlayer().sendMessage("Congratulations, you planted a flag! The zone is now yours.");
-				}
-			}
-
-			// SPONGE FEEDING
-			else if(e.getClickedBlock().getType()==Material.SPONGE && e.getPlayer().getItemInHand().getType() == Material.SUGAR)
-			{
-				if(fedSponges.contains(e.getClickedBlock().getLocation()))
-				{
-					e.getPlayer().sendMessage("The sponge burps. It seems that it had been already fed.");
-					return;
-				}
-				Location spongeRef;
-				Team plTeam=mapInt.spongeOwner(e.getClickedBlock().getLocation());
-				if(plTeam == Team.RED)
-					spongeRef=mapInt.getSponges()[0];
-				else if(plTeam==Team.BLUE)
-					spongeRef=mapInt.getSponges()[1];
-				else
-				{
-					e.getPlayer().sendMessage("You cannot feed this sponge!");
-					return;
-				}
-
-				ItemStack st=e.getPlayer().getItemInHand();
-				if(st.getAmount()<1)
-					return;
-				else if(st.getAmount() == 1)
-					e.getPlayer().setItemInHand(new ItemStack(Material.AIR));
-				else
-					st.setAmount(st.getAmount()-1);
-
-				e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef, fedSponges), 3600L); // 3600 ticks = 3*60*20 = 3min
-				fedSponges.add(e.getClickedBlock().getLocation());
-				e.getPlayer().sendMessage("You successfully fed the sponge.");
 			}
 		}
+
+		// FLAG PLANTING
+		if(e.getClickedBlock().getType() == Material.STONE_BUTTON)
+		{
+			// Existance check
+			for(int i=0;i<4;i++)
+			{
+				if(mapInt.baseExists(e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation()))
+				{
+					// if the flag already exists
+					Location currPtr=e.getClickedBlock().getRelative(BlockFace.values()[i]).getLocation().clone();
+
+					byte wool_color;
+					if(mapInt.isBaseLocation(currPtr) == Team.RED)
+						wool_color=14;
+					else
+						wool_color=11;
+
+					currPtr.add(1,4,0);
+					for(int j=0;j<3;j++)
+					{
+						currPtr.getBlock().setType(Material.WOOL);
+						currPtr.getBlock().setData(wool_color);
+						currPtr.add(1,0,0);	
+					}
+					currPtr.add(-1,-1,0);
+					for(int j=0;j<3;j++)
+					{
+						currPtr.getBlock().setType(Material.WOOL);
+						currPtr.getBlock().setData(wool_color);
+						currPtr.add(-1,0,0);	
+					}
+					return;
+				}
+			}
+
+			Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
+			if(locationArray[0]!=null) // A flag was activated
+			{
+				// Zone check (each corner)
+				Location loc=locationArray[0].clone();
+				int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
+				String playerName=e.getPlayer().getName();
+				ZoneType cornerType;
+				boolean ennemyZone=false;
+
+				loc.add(InitialGeneration.baseRadius, 0, InitialGeneration.baseRadius);
+				cornerType=mapInt.getPlayerZone(playerName, loc);
+				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+					ennemyZone=true;
+
+				loc.add(0,0,zoneWidth*-1);
+				cornerType=mapInt.getPlayerZone(playerName, loc);
+				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+					ennemyZone=true;
+
+				loc.add(zoneWidth*-1, 0,0);
+				cornerType=mapInt.getPlayerZone(playerName, loc);
+				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+					ennemyZone=true;
+
+				loc.add(0,0,zoneWidth);
+				cornerType=mapInt.getPlayerZone(playerName, loc);
+				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+					ennemyZone=true;
+
+				// Check corner now.
+				if(ennemyZone)
+				{
+					e.getPlayer().sendMessage("Your new base has a part into ennemy's base or no man's land. It cannot be built.");
+					return;
+				}
+
+				Team plTeam=mapInt.getPlayerTeam(e.getPlayer().getName());
+				colourFlag(plTeam, locationArray[1], locationArray[2]);
+				mapInt.newBase(plTeam, locationArray[0]);
+
+				e.getPlayer().sendMessage("Congratulations, you planted a flag! The zone is now yours.");
+			}
+		}
+
+		// SPONGE FEEDING
+		else if(e.getClickedBlock().getType()==Material.SPONGE && e.getPlayer().getItemInHand().getType() == Material.SUGAR)
+		{
+			if(fedSponges.contains(e.getClickedBlock().getLocation()))
+			{
+				e.getPlayer().sendMessage("The sponge burps. It seems that it had been already fed.");
+				return;
+			}
+			Location spongeRef;
+			Team plTeam=mapInt.spongeOwner(e.getClickedBlock().getLocation());
+			if(plTeam == Team.RED)
+				spongeRef=mapInt.getSponges()[0];
+			else if(plTeam==Team.BLUE)
+				spongeRef=mapInt.getSponges()[1];
+			else
+			{
+				e.getPlayer().sendMessage("You cannot feed this sponge!");
+				return;
+			}
+
+			ItemStack st=e.getPlayer().getItemInHand();
+			if(st.getAmount()<1)
+				return;
+			else if(st.getAmount() == 1)
+				e.getPlayer().setItemInHand(new ItemStack(Material.AIR));
+			else
+				st.setAmount(st.getAmount()-1);
+
+			e.getPlayer().getServer().getScheduler().scheduleSyncDelayedTask(instance, new RunnableSpongeGrow(e.getClickedBlock().getLocation(), spongeRef, fedSponges), 3600L); // 3600 ticks = 3*60*20 = 3min
+			fedSponges.add(e.getClickedBlock().getLocation());
+			e.getPlayer().sendMessage("You successfully fed the sponge.");
+		}
+	}
 
 	@EventHandler(priority=EventPriority.HIGH)
-		public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
+	public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
+	{
+		long day=currDayNum();
+		if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
 		{
-			long day=currDayNum();
-			if(e.getEntityType()==EntityType.PLAYER && day < days_playerHarming)
+			if(e.getDamager().getType()==EntityType.PLAYER)
 			{
-				if(e.getDamager().getType()==EntityType.PLAYER)
-				{
-					e.setCancelled(true);
-					((Player)e.getDamager()).sendMessage("You cannot hurt a player before day "+String.valueOf(days_playerHarming)+"!");
-				}
-				else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
-				{
-					e.setCancelled(true);
-				}
+				e.setCancelled(true);
+				((Player)e.getDamager()).sendMessage("You cannot hurt a player before day "+String.valueOf(days_playerHarming)+"!");
+			}
+			else if(e.getDamager().getType()==EntityType.ARROW) // Fuck the skeletons, player protection is needed.
+			{
+				e.setCancelled(true);
 			}
 		}
+	}
 
 	@EventHandler(priority=EventPriority.HIGHEST)
-		public void onEntityExplodeEvent(EntityExplodeEvent e)
+	public void onEntityExplodeEvent(EntityExplodeEvent e)
+	{
+		List<Block> exploded=new ArrayList<Block>();
+		exploded.addAll(e.blockList());
+		long day=currDayNum();
+
+		for(int i=0;i<exploded.size();i++)
 		{
-			List<Block> exploded=new ArrayList<Block>();
-			exploded.addAll(e.blockList());
-			long day=currDayNum();
+			Material type=exploded.get(i).getType();
+			ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
 
-			for(int i=0;i<exploded.size();i++)
+			if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) || 
+					(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY)) ||
+					(type == Material.LOG && mapInt.isFlagpole(exploded.get(i).getLocation())))
 			{
-				Material type=exploded.get(i).getType();
-				ZoneType zt=mapInt.getPlayerZone(null, e.getLocation());
-
-				if(type == Material.SPONGE || (type==Material.CHEST && day<days_chestOpening) || 
-						(day<days_baseBreaking && (zt==ZoneType.ALLY || zt==ZoneType.ENNEMY)) ||
-						(type == Material.LOG && mapInt.isFlagpole(exploded.get(i).getLocation())))
-				{
-					e.blockList().remove(exploded.get(i));
-				}
+				e.blockList().remove(exploded.get(i));
 			}
 		}
+	}
+
+	@EventHandler
+	void onPlayerMoveEvent(PlayerMoveEvent event) {
+		if(!coordEquals(event.getFrom(), event.getTo())) {
+			MapInterpreter.ZoneType zone = mapInt.getPlayerZone(event.getPlayer().getName(), event.getTo());
+			if(prevPlayerZone.get(event.getPlayer().getName()) != zone) {
+				event.getPlayer().sendMessage(ChatColor.RED + "You're now in " + mapInt.getZoneLabel(zone) + " zone!");
+				prevPlayerZone.put(event.getPlayer().getName(), zone);
+			}	
+		}
+	}
+
+	protected boolean coordEquals(Location l1, Location l2) {
+		if(l1.getX() == l2.getX() && l1.getY() == l2.getY() && l1.getZ() == l2.getZ())
+			return true;
+		return false;
+	}
 
 	protected Location[] isFlag(Location blockPtr)
 	{
@@ -736,7 +757,7 @@ public class EventManager implements Listener
 			wool_a.add(v);
 		}
 	}
-	
+
 	public long currDayNum()
 	{
 		if(beginTime < 0)
