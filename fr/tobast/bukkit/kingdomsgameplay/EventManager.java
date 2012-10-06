@@ -280,7 +280,7 @@ public class EventManager implements Listener
 							e.getPlayer().sendMessage("You're in ennemy zone, placing this block costs "+cost+"!");
 						}
 					}
-					else if(blockType!=Material.TNT && blockType!=Material.LEVER)
+					else if(blockType!=Material.TNT)
 					{
 						e.setCancelled(true);
 						e.getPlayer().sendMessage("You cannot build on the ennemy base and the surrounding no man's land, except TNT and levers!");
