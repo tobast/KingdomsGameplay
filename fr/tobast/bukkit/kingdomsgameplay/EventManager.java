@@ -514,35 +514,7 @@ public class EventManager implements Listener
 			Location[] locationArray=isFlag(e.getClickedBlock().getLocation().clone()); // [0] -> base, [1] -> wool_a, [2] -> wool_b. If not a flag, [0] -> null
 			if(locationArray[0]!=null) // A flag was activated
 			{
-				// Zone check (each corner)
-				Location loc=locationArray[0].clone();
-				int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
-				String playerName=e.getPlayer().getName();
-				ZoneType cornerType;
-				boolean ennemyZone=false;
-
-				loc.add(InitialGeneration.baseRadius, 0, InitialGeneration.baseRadius);
-				cornerType=mapInt.getPlayerZone(playerName, loc);
-				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-					ennemyZone=true;
-
-				loc.add(0,0,zoneWidth*-1);
-				cornerType=mapInt.getPlayerZone(playerName, loc);
-				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-					ennemyZone=true;
-
-				loc.add(zoneWidth*-1, 0,0);
-				cornerType=mapInt.getPlayerZone(playerName, loc);
-				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-					ennemyZone=true;
-
-				loc.add(0,0,zoneWidth);
-				cornerType=mapInt.getPlayerZone(playerName, loc);
-				if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
-					ennemyZone=true;
-
-				// Check corner now.
-				if(ennemyZone)
+				if(!mapInt.canBuildFlag(e.getPlayer(), locationArray[0]))
 				{
 					e.getPlayer().sendMessage("Your new base has a part into ennemy's base or no man's land. It cannot be built.");
 					return;
