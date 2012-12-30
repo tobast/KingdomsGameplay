@@ -49,6 +49,7 @@ import org.bukkit.entity.Player;
 
 import fr.tobast.bukkit.kingdomsgameplay.Team;
 import fr.tobast.bukkit.kingdomsgameplay.InitialGeneration;
+import fr.tobast.bukkit.kingdomsgameplay.KingdomsGameplay;
 
 public class MapInterpreter
 {
@@ -727,6 +728,38 @@ public class MapInterpreter
 		else {
 			player.setCompassTarget(sponges[0]);
 		}
+	}
+
+	public boolean canBuildFlag(Player player, Location locToCheck) {
+		// Zone check (each corner)
+		Location loc=locToCheck.clone();
+		int zoneWidth=2*InitialGeneration.baseRadius + 1; // 2 radius + center (1)
+		String playerName=player.getName();
+		ZoneType cornerType;
+		boolean ennemyZone=false;
+
+		loc.add(InitialGeneration.baseRadius, 0, InitialGeneration.baseRadius);
+		cornerType=getPlayerZone(playerName, loc);
+		if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+			ennemyZone=true;
+
+		loc.add(0,0,zoneWidth*-1);
+		cornerType=getPlayerZone(playerName, loc);
+		if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+			ennemyZone=true;
+
+		loc.add(zoneWidth*-1, 0,0);
+		cornerType=getPlayerZone(playerName, loc);
+		if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+			ennemyZone=true;
+
+		loc.add(0,0,zoneWidth);
+		cornerType=getPlayerZone(playerName, loc);
+		if(cornerType==ZoneType.ENNEMY_NOMANSLAND || cornerType==ZoneType.ENNEMY)
+			ennemyZone=true;
+
+		// Check corner now.
+		return !(ennemyZone);
 	}
 }
 

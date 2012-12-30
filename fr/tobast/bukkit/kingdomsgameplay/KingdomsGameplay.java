@@ -150,6 +150,22 @@ public class KingdomsGameplay extends JavaPlugin
 				}
 			}
 
+			else if(label.equals("canbuildflag"))
+			{
+				if(!(sender instanceof Player))
+				{
+					sender.sendMessage("You must be a player to perform that action!");
+					return false;
+				}
+				Player player=(Player)sender;
+				
+				if(mapInt.canBuildFlag(player, player.getLocation()) == true)
+					sender.sendMessage("You can build a flag here!");
+				else
+					sender.sendMessage("You cannot build a flag here, as a part of your base would be into the ennemy's base or no man's land.");
+				return true;
+			}
+
 			else if(label.equals("team"))
 			{
 				if(args.length == 1)
@@ -378,7 +394,7 @@ public class KingdomsGameplay extends JavaPlugin
 							{
 								int number=Integer.valueOf(args[1]);
 								for(int i=0; i<number; i++)
-									plSender.getWorld().spawnCreature(plSender.getLocation(), EntityType.SHEEP);
+									plSender.getWorld().spawnEntity(plSender.getLocation(), EntityType.SHEEP);
 							}
 							else
 							{

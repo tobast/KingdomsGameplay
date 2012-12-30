@@ -9,6 +9,10 @@ commands:
         usage: /zone
         permission: KingdomsGameplay.zone
         permission-message: You don't have the permission to do this!
+    canbuildflag:
+        description: Checks whether you can or cannot build a flag where you stand.
+        permission: KingdomsGameplay.canbuildflag
+        permission-message: You don't have the permission to do this!
     team:
         description: Prints a player team
         usage: /team player
