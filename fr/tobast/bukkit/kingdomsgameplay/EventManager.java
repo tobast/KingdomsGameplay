@@ -392,6 +392,13 @@ public class EventManager implements Listener
 
 		if(e.getBlock().getType() == Material.SPONGE)
 		{
+			Team spongeTeam=mapInt.spongeOwner(e.getBlock().getLocation());
+
+			if(mapInt.getPlayerTeam(e.getPlayer().getName()) == spongeTeam) {
+				e.setCancelled(true);
+				e.getPlayer().sendMessage("You cannot hurt you own sponge.");
+				return;
+			}
 			if(day < days_spongeHarming)
 			{
 				e.setCancelled(true);
@@ -399,7 +406,6 @@ public class EventManager implements Listener
 				return;
 			}
 
-			Team spongeTeam=mapInt.spongeOwner(e.getBlock().getLocation());
 			Player[] onlinePlayers=instance.getServer().getOnlinePlayers();
 			for(int i=0;i<onlinePlayers.length;i++)
 			{
